@@ -13,19 +13,21 @@ public class ColumnDefinition {
     private final int position;
 
     public ColumnDefinition(int oid, int tableOid, int typeOid, String name, int position) {
+        if (oid < 0) throw new IllegalArgumentException("oid must be >= 0");
+        if (tableOid < 0) throw new IllegalArgumentException("tableOid must be >= 0");
+        if (typeOid < 0) throw new IllegalArgumentException("typeOid must be >= 0");
+        this.name = Objects.requireNonNull(name, "name");
+        if (this.name.isEmpty()) throw new IllegalArgumentException("name must not be empty");
+        if (position < 0) throw new IllegalArgumentException("position must be >= 0");
+
         this.oid = oid;
         this.tableOid = tableOid;
         this.typeOid = typeOid;
-        this.name = Objects.requireNonNull(name, "name");
         this.position = position;
     }
 
     public ColumnDefinition(int typeOid, String name, int position) {
-        oid = 0;
-        tableOid = 0;
-        this.typeOid = typeOid;
-        this.name = Objects.requireNonNull(name, "name");
-        this.position = position;
+        this(0, 0, typeOid, name, position);
     }
 
     public static ColumnDefinition fromBytes(byte[] data) {
@@ -84,5 +86,20 @@ public class ColumnDefinition {
         buffer.put(nameBytes);
         return buffer.array();
     }
-}
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ColumnDefinition that)) return false;
+        return oid == that.oid
+                && tableOid == that.tableOid
+                && typeOid == that.typeOid
+                && position == that.position
+                && name.equals(that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(oid, tableOid, typeOid, name, position);
+    }
+}

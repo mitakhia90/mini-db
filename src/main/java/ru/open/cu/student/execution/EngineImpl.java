@@ -1,4 +1,3 @@
-
 package ru.open.cu.student.execution;
 
 import ru.open.cu.student.SqlProcessor;
@@ -92,8 +91,42 @@ public class EngineImpl implements Engine {
             // flush, чтобы персистилось
             bufferPool.flushAllPages();
 
-if (rows.isEmpty()) return "OK";
-        return rows.stream().map(String::valueOf).collect(Collectors.joining("\n"));
+            if (rows.isEmpty()) return "OK";
+            // If executor returned raw byte[] rows (legacy), try to deserialize using table columns
+            String tableName = (queryTree.rangeTable != null && !queryTree.rangeTable.isEmpty()) ? queryTree.rangeTable.get(0).relname : null;
+            return rows.stream().map(r -> {
+                if (r instanceof java.util.List<?> l) {
+                    return l.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(", "));
+                }
+                if (r instanceof byte[] b && tableName != null) {
+                    // try to deserialize using catalog
+                    var table = catalog.getTable(tableName);
+                    if (table != null) {
+                        var cols = catalog.getTableColumns(table);
+                        java.nio.ByteBuffer buf = java.nio.ByteBuffer.wrap(b).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+                        java.util.List<String> parts = new java.util.ArrayList<>();
+                        for (var col : cols) {
+                            var type = catalog.getType(col.getTypeOid());
+                            String tn = type.name().toLowerCase();
+                            switch (tn) {
+                                case "integer": parts.add(String.valueOf(buf.getInt())); break;
+                                case "bigint": parts.add(String.valueOf(buf.getLong())); break;
+                                case "boolean": parts.add(String.valueOf(buf.get() != 0)); break;
+                                case "varchar": {
+                                    int len = buf.getShort() & 0xFFFF;
+                                    byte[] s = new byte[len];
+                                    buf.get(s);
+                                    parts.add(new String(s, java.nio.charset.StandardCharsets.UTF_8));
+                                    break;
+                                }
+                                default: parts.add("<unk>"); break;
+                            }
+                        }
+                        return String.join(", ", parts);
+                    }
+                }
+                return String.valueOf(r);
+            }).collect(java.util.stream.Collectors.joining("\n"));
 
         } catch (Exception e) {
         return "ERROR: " + e.getMessage();

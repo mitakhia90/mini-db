@@ -48,7 +48,12 @@ public class DefaultBufferPoolManager implements BufferPoolManager {
             evictPage();
         }
 
-        Page page = pgManager.read(pageId, dataPath);
+        Page page;
+        try {
+            page = pgManager.read(pageId, dataPath);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
         BufferSlot newSlot = new BufferSlot(pageId, page);
         store.put(pageId, newSlot);
 

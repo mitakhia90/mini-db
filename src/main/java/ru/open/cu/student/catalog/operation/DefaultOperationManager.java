@@ -4,11 +4,14 @@ import ru.open.cu.student.catalog.manager.CatalogManager;
 import ru.open.cu.student.catalog.model.TableDefinition;
 import ru.open.cu.student.catalog.model.ColumnDefinition;
 import ru.open.cu.student.catalog.model.TypeDefinition;
+import ru.open.cu.student.memory.page.HeapPage;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class DefaultOperationManager implements OperationManager {
@@ -33,36 +36,23 @@ public class DefaultOperationManager implements OperationManager {
 
         byte[] rowData = serializeRow(values, columns);
 
-        byte[] page = readPage(table, 0);
-        int freePos = findFreePosition(page);
+        byte[] pageBytes = readPage(table);
+        HeapPage page = new HeapPage(0, pageBytes);
+        if (!page.isValid()) {
+            page = new HeapPage(0);
+            pageBytes = page.bytes();
+        }
 
-        if (freePos + rowData.length + 4 <= PAGE_SIZE) {
-            writeRow(page, freePos, rowData);
-            writePage(table, 0, page);
-        } else {
+        try {
+            page.write(rowData);
+        } catch (IllegalArgumentException e) {
+            // сохраняем внешний контракт/сообщение для CLI
             throw new IllegalStateException("No space in page");
         }
-    }
 
-    @Override
-    public List<Object> select(String tableName, List<String> columnNames) {
-        TableDefinition table = catalogManager.getTable(tableName);
-        if (table == null) {
-            throw new IllegalArgumentException("Table not found: " + tableName);
-        }
-
-        List<Object> result = new ArrayList<>();
-        List<ColumnDefinition> allColumns = getTableColumns(table);
-        List<ColumnDefinition> selectedColumns = columnNames.isEmpty() ?
-                allColumns : getSelectedColumns(allColumns, columnNames);
-
-
-        byte[] page = readPage(table, 0);
-        if (page != null) {
-            result.addAll(readPageRows(page, selectedColumns, allColumns));
-        }
-
-        return result;
+        // ВАЖНО: HeapPage.write() изменяет внутренний ByteBuffer, который обёрнут над pageBytes,
+        // поэтому pageBytes теперь содержит актуальные данные. Писать нужно именно его.
+        writePage(table, pageBytes);
     }
 
     private byte[] serializeRow(List<Object> values, List<ColumnDefinition> columns) {
@@ -124,27 +114,52 @@ public class DefaultOperationManager implements OperationManager {
         return row;
     }
 
-    private int findFreePosition(byte[] page) {
-        ByteBuffer buffer = ByteBuffer.wrap(page).order(ByteOrder.LITTLE_ENDIAN);
-        int position = 0;
+    private List<Object> readHeapPageRows(HeapPage page, List<ColumnDefinition> selectedColumns,
+                                         List<ColumnDefinition> allColumns) {
+        List<Object> rows = new ArrayList<>();
+        for (int i = 0; i < page.size(); i++) {
+            byte[] rowBytes = page.read(i);
+            ByteBuffer rowBuf = ByteBuffer.wrap(rowBytes).order(ByteOrder.LITTLE_ENDIAN);
+            List<Object> row = deserializeRow(rowBuf, allColumns);
 
-        while (position < PAGE_SIZE - 4) {
-            buffer.position(position);
-            int size = buffer.getInt();
-            if (size == 0) {
-                return position;
+            if (!selectedColumns.equals(allColumns)) {
+                List<Object> filteredRow = new ArrayList<>();
+                for (int c = 0; c < allColumns.size(); c++) {
+                    if (selectedColumns.contains(allColumns.get(c))) {
+                        filteredRow.add(row.get(c));
+                    }
+                }
+                rows.add(filteredRow);
+            } else {
+                rows.add(row);
             }
-            position += 4 + size;
         }
-
-        return position;
+        return rows;
     }
 
-    private void writeRow(byte[] page, int position, byte[] rowData) {
-        ByteBuffer buffer = ByteBuffer.wrap(page).order(ByteOrder.LITTLE_ENDIAN);
-        buffer.position(position);
-        buffer.putInt(rowData.length);
-        buffer.put(rowData);
+    @Override
+    public List<Object> select(String tableName, List<String> columnNames) {
+        TableDefinition table = catalogManager.getTable(tableName);
+        if (table == null) {
+            throw new IllegalArgumentException("Table not found: " + tableName);
+        }
+
+        List<Object> result = new ArrayList<>();
+        List<ColumnDefinition> allColumns = getTableColumns(table);
+        List<ColumnDefinition> selectedColumns = columnNames.isEmpty() ?
+                allColumns : getSelectedColumns(allColumns, columnNames);
+
+        byte[] pageBytes = readPage(table);
+        HeapPage page = new HeapPage(0, pageBytes);
+        if (page.isValid()) {
+            result.addAll(readHeapPageRows(page, selectedColumns, allColumns));
+        } else {
+            // fallback на старый формат (int size + payload)*
+            result.addAll(readPageRows(pageBytes, selectedColumns, allColumns));
+        }
+
+
+        return result;
     }
 
     private List<Object> readPageRows(byte[] page, List<ColumnDefinition> selectedColumns,
@@ -183,22 +198,20 @@ public class DefaultOperationManager implements OperationManager {
         return rows;
     }
 
-    private byte[] readPage(TableDefinition table, int pageNum) {
-        String filename = table.getOid() + ".dat";
-        File file = new File(filename);
-
-        // If file doesn't exist — return a newly initialized page with HeapPage header
+    private byte[] readPage(TableDefinition table) {
+        Path path = resolveDataPath(table);
+        File file = path.toFile();
         if (!file.exists()) {
             return createEmptyHeapPageBytes();
         }
 
         try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-            if (pageNum * PAGE_SIZE >= raf.length()) {
+            if (0 >= raf.length()) {
                 // page beyond file size -> return empty initialized page
                 return createEmptyHeapPageBytes();
             }
 
-            raf.seek(pageNum * PAGE_SIZE);
+            raf.seek(0);
             byte[] page = new byte[PAGE_SIZE];
             int bytesRead = raf.read(page);
 
@@ -220,6 +233,7 @@ public class DefaultOperationManager implements OperationManager {
                 System.arraycopy(buf.array(), 0, page, 0, PAGE_SIZE);
             }
 
+
             return page;
         } catch (IOException e) {
             throw new RuntimeException("Failed to read page", e);
@@ -236,11 +250,11 @@ public class DefaultOperationManager implements OperationManager {
         return page;
     }
 
-    private void writePage(TableDefinition table, int pageNum, byte[] page) {
-        String filename = table.getOid() + ".dat";
+    private void writePage(TableDefinition table, byte[] page) {
+        Path path = resolveDataPath(table);
 
-        try (RandomAccessFile raf = new RandomAccessFile(filename, "rw")) {
-            raf.seek(pageNum * PAGE_SIZE);
+        try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw")) {
+            raf.seek(0);
             raf.write(page);
         } catch (IOException e) {
             throw new RuntimeException("Failed to write page", e);
@@ -280,5 +294,13 @@ public class DefaultOperationManager implements OperationManager {
             }
         }
         return selected;
+    }
+
+    private Path resolveDataPath(TableDefinition table) {
+        String fileNode = table.getFileNode();
+        if (fileNode == null || fileNode.isBlank()) {
+            fileNode = table.getOid() + ".dat";
+        }
+        return Paths.get(fileNode).toAbsolutePath();
     }
 }

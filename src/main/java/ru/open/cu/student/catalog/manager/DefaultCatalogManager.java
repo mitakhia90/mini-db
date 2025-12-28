@@ -3,6 +3,7 @@ package ru.open.cu.student.catalog.manager;
 import ru.open.cu.student.catalog.model.TableDefinition;
 import ru.open.cu.student.catalog.model.ColumnDefinition;
 import ru.open.cu.student.catalog.model.TypeDefinition;
+import ru.open.cu.student.memory.page.HeapPage;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -213,11 +214,29 @@ public class DefaultCatalogManager implements CatalogManager {
 
     private void createDataFile(int oid) {
         String filename = oid + ".dat";
+        File file = new File(filename);
         try {
-            new File(filename).createNewFile();
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+                if (raf.length() == 0) {
+                    raf.write(createEmptyHeapPage());
+                }
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed to create data file: " + filename, e);
         }
+    }
+
+    private byte[] createEmptyHeapPage() {
+        byte[] page = new byte[HeapPage.PAGE_SIZE];
+        ByteBuffer buf = ByteBuffer.wrap(page).order(ByteOrder.LITTLE_ENDIAN);
+        buf.putInt(0, 0xDBDB01);
+        buf.putShort(4, (short) 0);
+        buf.putShort(6, (short) 10);
+        buf.putShort(8, (short) HeapPage.PAGE_SIZE);
+        return page;
     }
 
     private void loadTable(byte[] data) {

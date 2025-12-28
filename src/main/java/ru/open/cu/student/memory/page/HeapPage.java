@@ -1,6 +1,7 @@
 package ru.open.cu.student.memory.page;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 public class HeapPage implements Page {
 
@@ -11,12 +12,12 @@ public class HeapPage implements Page {
     private final int pageId;
 
     public HeapPage(int pageId, byte[] data) {
-        this.data = ByteBuffer.wrap(data);
+        this.data = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN);
         this.pageId = pageId;
     }
 
     public HeapPage(int pageId) {
-        this.data = ByteBuffer.allocate(PAGE_SIZE);
+        this.data = ByteBuffer.allocate(PAGE_SIZE).order(ByteOrder.LITTLE_ENDIAN);
         this.pageId = pageId;
 
         data.putInt(0, 0xDBDB01);
@@ -59,7 +60,9 @@ public class HeapPage implements Page {
         var length = data.getShort(HEADER_SIZE + index * 4 + 2) & 0xFFFF;
 
         var result = new byte[length];
-        data.get(offset, result);
+        // Use position + get(byte[]) to read the chunk
+        data.position(offset);
+        data.get(result);
         return result;
     }
 
@@ -73,9 +76,15 @@ public class HeapPage implements Page {
             throw new IllegalArgumentException("Not enough space");
         }
 
-        this.data.put(upper - data.length, data);
+        // write record bytes at the end area
+        this.data.position(upper - data.length);
+        this.data.put(data);
+
+        // update slot directory lower and upper
         this.data.putShort(6, (short) (lower + 4));
         this.data.putShort(8, (short) (upper - data.length));
+
+        // write slot metadata (offset, length)
         this.data.putShort(HEADER_SIZE + index * 4, (short) (upper - data.length));
         this.data.putShort(HEADER_SIZE + index * 4 + 2, (short) data.length);
         this.data.putShort(4, (short) (index + 1));

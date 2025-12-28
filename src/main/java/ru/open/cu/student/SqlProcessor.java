@@ -94,7 +94,9 @@ public class SqlProcessor {
         // Преобразуем ColumnDefinition в TargetEntry
         for (ColumnDefinition col : cs.columns) {
             TargetEntry te = new TargetEntry(null, col.getName());
-            te.resultType = String.valueOf(col.getTypeOid());
+            // сохраняем не OID как строку, а "логическое" имя типа.
+            // planner умеет резолвить и имя, и OID.
+            te.resultType = catalogManager.getType(col.getTypeOid()).name();
             q.targetList.add(te);
         }
         return q;

@@ -43,11 +43,21 @@ public class PlannerImpl implements Planner {
         List<ColumnDefinition> columns = new ArrayList<>();
         int position = 0;
         for (TargetEntry te : q.targetList) {
-            // resultType is stored as string representation of OID
-            int typeOid = Integer.parseInt(te.resultType);
-            TypeDefinition type = catalogManager.getType(typeOid);
+            TypeDefinition type;
+            String rt = te.resultType;
+            if (rt == null || rt.isBlank()) {
+                throw new IllegalArgumentException("Column type is not specified");
+            }
+
+            try {
+                int typeOid = Integer.parseInt(rt);
+                type = catalogManager.getType(typeOid);
+            } catch (NumberFormatException ignored) {
+                type = catalogManager.getType(rt);
+            }
+
             if (type == null) {
-                throw new IllegalArgumentException("Type with OID " + typeOid + " not found");
+                throw new IllegalArgumentException("Type '" + rt + "' not found");
             }
 
             columns.add(new ColumnDefinition(

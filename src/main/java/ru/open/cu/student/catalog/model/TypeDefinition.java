@@ -7,8 +7,11 @@ import java.util.Objects;
 
 public record TypeDefinition(int oid, String name, int byteLength) {
     public TypeDefinition(int oid, String name, int byteLength) {
-        this.oid = oid;
+        if (oid < 0) throw new IllegalArgumentException("oid must be >= 0");
         this.name = Objects.requireNonNull(name, "name");
+        if (this.name.isEmpty()) throw new IllegalArgumentException("name must not be empty");
+        if (byteLength < -1) throw new IllegalArgumentException("byteLength must be >= -1");
+        this.oid = oid;
         this.byteLength = byteLength;
     }
 
@@ -51,4 +54,3 @@ public record TypeDefinition(int oid, String name, int byteLength) {
         return buffer.array();
     }
 }
-

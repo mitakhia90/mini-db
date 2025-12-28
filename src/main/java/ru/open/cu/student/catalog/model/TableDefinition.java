@@ -17,10 +17,16 @@ public class TableDefinition {
     private final List<ColumnDefinition> columns = new ArrayList<>();
 
     public TableDefinition(int oid, String name, String type, String fileNode, int pagesCount) {
-        this.oid = oid;
+        if (oid < 0) throw new IllegalArgumentException("oid must be >= 0");
         this.name = Objects.requireNonNull(name, "name");
+        if (this.name.isEmpty()) throw new IllegalArgumentException("name must not be empty");
         this.type = Objects.requireNonNull(type, "type");
+        if (this.type.isEmpty()) throw new IllegalArgumentException("type must not be empty");
         this.fileNode = Objects.requireNonNull(fileNode, "fileNode");
+        if (this.fileNode.isEmpty()) throw new IllegalArgumentException("fileNode must not be empty");
+        if (pagesCount < 0) throw new IllegalArgumentException("pagesCount must be >= 0");
+
+        this.oid = oid;
         this.pagesCount = pagesCount;
     }
 
@@ -123,5 +129,21 @@ public class TableDefinition {
         buffer.putInt(pagesCount);
 
         return buffer.array();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TableDefinition that)) return false;
+        return oid == that.oid
+                && pagesCount == that.pagesCount
+                && name.equals(that.name)
+                && type.equals(that.type)
+                && fileNode.equals(that.fileNode);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(oid, name, type, fileNode, pagesCount);
     }
 }
