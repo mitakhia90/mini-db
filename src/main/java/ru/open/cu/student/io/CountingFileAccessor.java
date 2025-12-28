@@ -13,6 +13,10 @@ public class CountingFileAccessor implements FileAccessor {
     private final AtomicInteger writePageCount = new AtomicInteger(0);
     private final AtomicInteger appendPageCount = new AtomicInteger(0);
 
+    public CountingFileAccessor() {
+        this(new DiskFileAccessor());
+    }
+
     public CountingFileAccessor(FileAccessor delegate) {
         this.delegate = delegate;
     }
@@ -51,7 +55,5 @@ public class CountingFileAccessor implements FileAccessor {
     }
 
     public int getReadCount() { return readPageCount.get(); }
-    public int getWriteCount() { return writePageCount.get(); }
-    public int getAppendCount() { return appendPageCount.get(); }
-}
 
+}

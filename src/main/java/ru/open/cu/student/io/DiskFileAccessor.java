@@ -40,18 +40,24 @@ public class DiskFileAccessor implements FileAccessor {
     @Override
     public byte[] readPage(Path path, int pageId, int pageSize) throws IOException {
         if (!Files.exists(path)) {
-            return new byte[pageSize];
+            return createEmptyHeapPage(pageSize);
         }
         try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "r")) {
             long offset = ((long) pageId) * pageSize;
-            if (offset >= raf.length()) {
-                return new byte[pageSize];
+            long fileLen = raf.length();
+            if (offset >= fileLen) {
+                // requested page is beyond EOF => return initialized empty page
+                return createEmptyHeapPage(pageSize);
             }
             raf.seek(offset);
             byte[] page = new byte[pageSize];
             int read = raf.read(page);
+            if (read <= 0) {
+                // nothing read -> return empty initialized page
+                return createEmptyHeapPage(pageSize);
+            }
             if (read < pageSize) {
-                Arrays.fill(page, read < 0 ? 0 : read, pageSize, (byte) 0);
+                Arrays.fill(page, read, pageSize, (byte) 0);
             }
             return page;
         }
