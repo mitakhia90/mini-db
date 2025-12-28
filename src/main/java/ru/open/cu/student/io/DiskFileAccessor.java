@@ -2,6 +2,8 @@ package ru.open.cu.student.io;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -13,16 +15,26 @@ public class DiskFileAccessor implements FileAccessor {
             Files.createFile(path);
             try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw")) {
                 raf.setLength(0);
-                raf.write(new byte[pageSize]);
+                raf.write(createEmptyHeapPage(pageSize));
             }
         } else {
             // if exists but empty, initialize with one page
             try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw")) {
                 if (raf.length() == 0) {
-                    raf.write(new byte[pageSize]);
+                    raf.write(createEmptyHeapPage(pageSize));
                 }
             }
         }
+    }
+
+    private byte[] createEmptyHeapPage(int pageSize) {
+        byte[] page = new byte[pageSize];
+        ByteBuffer buf = ByteBuffer.wrap(page).order(ByteOrder.LITTLE_ENDIAN);
+        buf.putInt(0, 0xDBDB01);
+        buf.putShort(4, (short) 0);          // size = 0
+        buf.putShort(6, (short) 10);         // lower = HEADER_SIZE (10)
+        buf.putShort(8, (short) pageSize);   // upper = PAGE_SIZE
+        return page;
     }
 
     @Override
@@ -76,4 +88,3 @@ public class DiskFileAccessor implements FileAccessor {
         return Files.deleteIfExists(path);
     }
 }
-

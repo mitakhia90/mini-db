@@ -8,4 +8,9 @@ public interface OperationManager {
 
     List<Object> select(String tableName, List<String> columnNames);
 
+    // Удалить строки из таблицы, где columnName = value
+    default int delete(String tableName, String columnName, Object value) {
+        throw new UnsupportedOperationException("delete is not supported");
+    }
+
 }

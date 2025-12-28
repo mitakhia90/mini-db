@@ -77,17 +77,31 @@ public class DefaultOperationManager implements OperationManager {
                     int pid = cachedPage;
                     byte[] page = fileAccessor.readPage(path, pid, PAGE_SIZE);
                     HeapPage hp = new HeapPage(pid, page);
-                    if (!hp.isValid()) hp = new HeapPage(pid);
-                    try {
-                        hp.write(rowData);
-                        fileAccessor.writePage(path, pid, hp.bytes());
-                        written = true;
-                        // update free hint
-                        int newFree = computeFreeSpace(hp.bytes());
-                        lastWritableFree.put(tableOid, newFree);
-                        lastWritablePage.put(tableOid, pid);
-                    } catch (IllegalArgumentException ignored) {
-                        // cache miss — will fallback to scan
+                    // Only use cache if page appears to be a valid HeapPage; otherwise treat as cache miss
+                    if (hp.isValid()) {
+                        try {
+                            // double-check free space from page header (avoid stale hints)
+                            int actualFree = computeFreeSpace(hp.bytes());
+                            if (actualFree >= rowData.length) {
+                                hp.write(rowData);
+                                fileAccessor.writePage(path, pid, hp.bytes());
+                                written = true;
+                                // update free hint
+                                int newFree = computeFreeSpace(hp.bytes());
+                                lastWritableFree.put(tableOid, newFree);
+                                lastWritablePage.put(tableOid, pid);
+                            } else {
+                                // hint was wrong
+                                lastWritablePage.remove(tableOid);
+                                lastWritableFree.remove(tableOid);
+                            }
+                        } catch (IllegalArgumentException ignored) {
+                            // cache miss — will fallback to scan
+                            lastWritablePage.remove(tableOid);
+                            lastWritableFree.remove(tableOid);
+                        }
+                    } else {
+                        // invalid page on disk -> ignore cached hint
                         lastWritablePage.remove(tableOid);
                         lastWritableFree.remove(tableOid);
                     }
@@ -158,6 +172,76 @@ public class DefaultOperationManager implements OperationManager {
     public int getScanCountForTable(int tableOid) {
         AtomicInteger ai = scanCounter.get(tableOid);
         return ai == null ? 0 : ai.get();
+    }
+
+    @Override
+    public int delete(String tableName, String columnName, Object value) {
+        TableDefinition table = catalogManager.getTable(tableName);
+        if (table == null) throw new IllegalArgumentException("Table not found: " + tableName);
+
+        List<ColumnDefinition> allColumns = getTableColumns(table);
+        int colIndex = -1;
+        for (int i = 0; i < allColumns.size(); i++) {
+            if (allColumns.get(i).getName().equalsIgnoreCase(columnName)) {
+                colIndex = i;
+                break;
+            }
+        }
+        if (colIndex == -1) throw new IllegalArgumentException("Column not found: " + columnName);
+
+        Path path = resolveDataPath(table);
+        int deleted = 0;
+
+        try {
+            int pagesCount = fileAccessor.getPageCount(path, PAGE_SIZE);
+
+            for (int pid = 0; pid < pagesCount; pid++) {
+                byte[] pageBytes = fileAccessor.readPage(path, pid, PAGE_SIZE);
+                HeapPage page = new HeapPage(pid, pageBytes);
+                if (!page.isValid()) {
+                    // old format - skip delete support
+                    continue;
+                }
+
+                List<byte[]> rows = new ArrayList<>();
+                for (int i = 0; i < page.size(); i++) {
+                    rows.add(page.read(i));
+                }
+
+                List<byte[]> keptRows = new ArrayList<>();
+                boolean anyDeleted = false;
+
+                for (byte[] rb : rows) {
+                    ByteBuffer rowBuf = ByteBuffer.wrap(rb).order(ByteOrder.LITTLE_ENDIAN);
+                    List<Object> row = deserializeRow(rowBuf, allColumns);
+                    Object colVal = row.get(colIndex);
+                    if (Objects.equals(colVal, value)) {
+                        deleted++;
+                        anyDeleted = true;
+                    } else {
+                        keptRows.add(rb);
+                    }
+                }
+
+                if (anyDeleted) {
+                    // compose new page with kept rows
+                    HeapPage newPage = new HeapPage(pid);
+                    for (byte[] kr : keptRows) {
+                        newPage.write(kr);
+                    }
+                    fileAccessor.writePage(path, pid, newPage.bytes());
+                    // update cache hint
+                    int free = computeFreeSpace(newPage.bytes());
+                    lastWritablePage.put(table.getOid(), pid);
+                    lastWritableFree.put(table.getOid(), free);
+                }
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to delete rows for table " + tableName, e);
+        }
+
+        return deleted;
     }
 
     private byte[] serializeRow(List<Object> values, List<ColumnDefinition> columns) {
@@ -298,6 +382,7 @@ public class DefaultOperationManager implements OperationManager {
                     result.addAll(readPageRows(pageBytes, selectedColumns, allColumns));
                 }
             }
+
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to read data file for table " + tableName, e);
