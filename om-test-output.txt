@@ -1,0 +1,152 @@
+Initialized native services in: /home/yury-samohvalov/.gradle/native
+Initialized jansi services in: /home/yury-samohvalov/.gradle/native
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.12/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Starting process 'Gradle build daemon'. Working directory: /home/yury-samohvalov/.gradle/daemon/8.12 Command: /usr/lib/jvm/java-21-openjdk-amd64/bin/java --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-opens=java.base/java.nio.charset=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.xml/javax.xml.namespace=ALL-UNNAMED -XX:MaxMetaspaceSize=384m -XX:+HeapDumpOnOutOfMemoryError -Xms256m -Xmx512m -Dfile.encoding=UTF-8 -Duser.country=RU -Duser.language=ru -Duser.variant -cp /home/yury-samohvalov/.gradle/wrapper/dists/gradle-8.12-bin/cetblhg4pflnnks72fxwobvgv/gradle-8.12/lib/gradle-daemon-main-8.12.jar -javaagent:/home/yury-samohvalov/.gradle/wrapper/dists/gradle-8.12-bin/cetblhg4pflnnks72fxwobvgv/gradle-8.12/lib/agents/gradle-instrumentation-agent-8.12.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon 8.12
+Successfully started process 'Gradle build daemon'
+An attempt to start the daemon took 1.8 secs.
+The client will now receive all logging from the daemon (pid: 424385). The daemon log file: /home/yury-samohvalov/.gradle/daemon/8.12/daemon-424385.out.log
+Daemon will be stopped at the end of the build 
+Using 8 worker leases.
+Received JVM installation metadata from '/usr/lib/jvm/java-21-openjdk-amd64': {JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64, JAVA_VERSION=21.0.9, JAVA_VENDOR=Ubuntu, RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=21.0.9+10-Ubuntu-124.04, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=21.0.9+10-Ubuntu-124.04, VM_VENDOR=Ubuntu, OS_ARCH=amd64}
+Watching the file system is configured to be enabled if available
+Now considering [/home/yury-samohvalov/Projects/mini-db] as hierarchies to watch
+File system watching is active
+Starting Build
+Settings evaluated using settings file '/home/yury-samohvalov/Projects/mini-db/settings.gradle'.
+Projects loaded. Root project using build file '/home/yury-samohvalov/Projects/mini-db/build.gradle'.
+Included projects: [root project 'di-practice']
+
+> Configure project :
+Evaluating root project 'di-practice' using build file '/home/yury-samohvalov/Projects/mini-db/build.gradle'.
+Resolved plugin [id: 'java']
+Resolved plugin [id: 'com.adarshr.test-logger', version: '4.0.0']
+All projects evaluated.
+Task name matched 'test'
+Selected primary task 'test' from project :
+Starting process 'command '/home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java''. Working directory: /home/yury-samohvalov/.gradle/.tmp/tmp-jvm4092078758189699210probe Command: /home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command '/home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java''
+Received JVM installation metadata from '/home/yury-samohvalov/.jdks/corretto-21.0.9': {JAVA_HOME=/home/yury-samohvalov/.jdks/corretto-21.0.9, JAVA_VERSION=21.0.9, JAVA_VENDOR=Amazon.com Inc., RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=21.0.9+11-LTS, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=21.0.9+11-LTS, VM_VENDOR=Amazon.com Inc., OS_ARCH=amd64}
+Tasks to be executed: [task ':compileJava', task ':processResources', task ':classes', task ':compileTestJava', task ':processTestResources', task ':testClasses', task ':test']
+Tasks that were excluded: []
+Resolve mutations for :compileJava (Thread[#78,Execution worker Thread 2,5,main]) started.
+:compileJava (Thread[#78,Execution worker Thread 2,5,main]) started.
+This JVM does not support getting OS memory, so no OS memory status updates will be broadcast
+
+> Task :compileJava
+Caching disabled for task ':compileJava' because:
+  Build cache is disabled
+Task ':compileJava' is not up-to-date because:
+  Input property 'stableSources' file /home/yury-samohvalov/Projects/mini-db/src/main/java/ru/open/cu/student/catalog/operation/DefaultOperationManager.java has changed.
+  Input property 'stableSources' file /home/yury-samohvalov/Projects/mini-db/src/main/java/ru/open/cu/student/cli/impl/DefaultEngine.java has changed.
+Compilation mode: default, forking compiler
+Created classpath snapshot for incremental compilation in 0.002 secs.
+Compiling with toolchain '/home/yury-samohvalov/.jdks/corretto-21.0.9'.
+Starting process 'Gradle Worker Daemon 1'. Working directory: /home/yury-samohvalov/.gradle/workers Command: /home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED @/home/yury-samohvalov/.gradle/.tmp/gradle-worker-classpath3423519367960726274txt -Xmx512m -Dfile.encoding=UTF-8 -Duser.country=RU -Duser.language=ru -Duser.variant worker.org.gradle.process.internal.worker.GradleWorkerMain 'Gradle Worker Daemon 1'
+Successfully started process 'Gradle Worker Daemon 1'
+Started Gradle worker daemon (0.562 secs) with fork options DaemonForkOptions{executable=/home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java, minHeapSize=null, maxHeapSize=null, jvmArgs=[--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED, --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED], keepAliveMode=DAEMON}.
+Compiling with JDK Java compiler API.
+Incremental compilation of 4 classes completed in 2.656 secs.
+Class dependency analysis for incremental compilation took 0.077 secs.
+Resolve mutations for :processResources (Thread[#78,Execution worker Thread 2,5,main]) started.
+:processResources (Thread[#78,Execution worker Thread 2,5,main]) started.
+
+> Task :processResources NO-SOURCE
+Skipping task ':processResources' as it has no source files and no previous output files.
+Resolve mutations for :classes (Thread[#78,Execution worker Thread 2,5,main]) started.
+:classes (Thread[#78,Execution worker Thread 2,5,main]) started.
+
+> Task :classes
+Skipping task ':classes' as it has no actions.
+Resolve mutations for :compileTestJava (Thread[#78,Execution worker Thread 2,5,main]) started.
+:compileTestJava (Thread[#78,Execution worker Thread 2,5,main]) started.
+
+> Task :compileTestJava
+Caching disabled for task ':compileTestJava' because:
+  Build cache is disabled
+Task ':compileTestJava' is not up-to-date because:
+  Input property 'stableSources' file /home/yury-samohvalov/Projects/mini-db/src/test/java/ru/open/cu/student/OperationManagerInsertBoundaryTest.java has been added.
+Compilation mode: default, forking compiler
+Created classpath snapshot for incremental compilation in 0.026 secs.
+Compiling with toolchain '/home/yury-samohvalov/.jdks/corretto-21.0.9'.
+Compiling with JDK Java compiler API.
+Incremental compilation of 3 classes completed in 0.724 secs.
+Class dependency analysis for incremental compilation took 0.023 secs.
+Resolve mutations for :processTestResources (Thread[#78,Execution worker Thread 2,5,main]) started.
+:processTestResources (Thread[#78,Execution worker Thread 2,5,main]) started.
+
+> Task :processTestResources NO-SOURCE
+Skipping task ':processTestResources' as it has no source files and no previous output files.
+Resolve mutations for :testClasses (Thread[#78,Execution worker Thread 2,5,main]) started.
+:testClasses (Thread[#79,Execution worker Thread 3,5,main]) started.
+
+> Task :testClasses
+Skipping task ':testClasses' as it has no actions.
+Resolve mutations for :test (Thread[#82,Execution worker Thread 6,5,main]) started.
+:test (Thread[#82,Execution worker Thread 6,5,main]) started.
+Gradle Test Executor 2 started executing tests.
+Gradle Test Executor 2 finished executing tests.
+
+> Task :test FAILED
+Caching disabled for task ':test' because:
+  Build cache is disabled
+Task ':test' is not up-to-date because:
+  Value of input property 'filter.commandLineIncludePatterns' has changed for task ':test'
+
+Starting process 'Gradle Test Executor 2'. Working directory: /home/yury-samohvalov/Projects/mini-db Command: /usr/lib/jvm/java-21-openjdk-amd64/bin/java -Dorg.gradle.internal.worker.tmpdir=/home/yury-samohvalov/Projects/mini-db/build/tmp/test/work @/home/yury-samohvalov/.gradle/.tmp/gradle-worker-classpath3251337985785986429txt -Xmx512m -Dfile.encoding=UTF-8 -Duser.country=RU -Duser.language=ru -Duser.variant -ea worker.org.gradle.process.internal.worker.GradleWorkerMain 'Gradle Test Executor 2'
+Successfully started process 'Gradle Test Executor 2'
+[0K[1mru.open.cu.student.OperationManagerInsertBoundaryTest[m
+
+[0K[1m  Test [22mappendNewPageWhenFull(Path)[32m PASSED[m
+[0K[1m  Test [22minsertTooLargeRowThrows(Path)[31m FAILED[31m
+
+  org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.nio.BufferOverflowException>
+      at app//ru.open.cu.student.OperationManagerInsertBoundaryTest.insertTooLargeRowThrows(OperationManagerInsertBoundaryTest.java:89)
+  Caused by: java.nio.BufferOverflowException
+      at ru.open.cu.student.OperationManagerInsertBoundaryTest.lambda$insertTooLargeRowThrows$0(OperationManagerInsertBoundaryTest.java:89)
+[m
+
+OperationManagerInsertBoundaryTest > insertTooLargeRowThrows(Path) FAILED
+    org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <java.nio.BufferOverflowException>
+        at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+        at app//org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:67)
+        at app//org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+        at app//org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3111)
+        at app//ru.open.cu.student.OperationManagerInsertBoundaryTest.insertTooLargeRowThrows(OperationManagerInsertBoundaryTest.java:89)
+
+        Caused by:
+        java.nio.BufferOverflowException
+            at java.base/java.nio.HeapByteBuffer.put(HeapByteBuffer.java:238)
+            at java.base/java.nio.ByteBuffer.put(ByteBuffer.java:1242)
+            at ru.open.cu.student.catalog.operation.DefaultOperationManager.serializeRow(DefaultOperationManager.java:161)
+            at ru.open.cu.student.catalog.operation.DefaultOperationManager.insert(DefaultOperationManager.java:41)
+            at ru.open.cu.student.OperationManagerInsertBoundaryTest.lambda$insertTooLargeRowThrows$0(OperationManagerInsertBoundaryTest.java:89)
+            at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:53)
+            ... 3 more
+
+[0K[1;31mFAILURE: [39mExecuted 2 tests in 1.6s (1 failed)[m
+
+
+2 tests completed, 1 failed
+Finished generating test XML results (0.044 secs) into: /home/yury-samohvalov/Projects/mini-db/build/test-results/test
+Generating HTML test report...
+Finished generating test html results (0.027 secs) into: /home/yury-samohvalov/Projects/mini-db/build/reports/tests/test
+
+[Incubating] Problems report is available at: file:///home/yury-samohvalov/Projects/mini-db/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':test'.
+> There were failing tests. See the report at: file:///home/yury-samohvalov/Projects/mini-db/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.12/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 23s
+3 actionable tasks: 3 executed

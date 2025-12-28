@@ -87,6 +87,10 @@ public class ProjectExecutor implements Executor {
         for (TargetEntry target : targetList) {
             if (target.expr instanceof ColumnRef) {
                 String colName = ((ColumnRef) target.expr).column;
+                // Handle SELECT * projection
+                if ("*".equals(colName)) {
+                    return fullRow;
+                }
                 int idx = findColumnIndex(colName);
                 if (idx >= 0 && idx < fullRow.size()) {
                     result.add(fullRow.get(idx));

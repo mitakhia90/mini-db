@@ -5,6 +5,7 @@ import ru.open.cu.student.memory.model.BufferSlot;
 import ru.open.cu.student.memory.page.Page;
 import ru.open.cu.student.memory.replacer.Replacer;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +51,20 @@ public class DefaultBufferPoolManager implements BufferPoolManager {
 
         Page page;
         try {
+            // Предварительная проверка: если файла нет или запрашиваемая страница выходит за пределы файла — вернуть null
+            try {
+                if (dataPath == null || !Files.exists(dataPath)) {
+                    return null;
+                }
+                long fileSize = Files.size(dataPath);
+                long position = ((long) pageId) * ru.open.cu.student.memory.page.HeapPage.PAGE_SIZE;
+                if (position >= fileSize) {
+                    return null;
+                }
+            } catch (Exception ignore) {
+                // если не удалось проверить — продолжим и позволим pgManager.read бросить исключение
+            }
+
             page = pgManager.read(pageId, dataPath);
         } catch (IllegalArgumentException e) {
             return null;

@@ -108,12 +108,20 @@ public class DefaultParser implements Parser{
 
     private int mapTypeNameToOid(String typeName) {
         // Простой маппинг типов на OID
-        return switch (typeName.toUpperCase()) {
+        String tn = typeName.toUpperCase();
+        final String VALID_TYPES = "integer,int,bigint,varchar,boolean";
+        return switch (tn) {
             case "INTEGER", "INT" -> 23;    // Пример OID для integer
             case "BIGINT" -> 20;            // Пример OID для bigint
             case "VARCHAR", "TEXT" -> 25;   // Пример OID для text
             case "BOOLEAN", "BOOL" -> 16;   // Пример OID для boolean
-            default -> 25;                  // По умолчанию text
+            default -> {
+                java.util.List<String> suggestions = suggestTypes(typeName);
+                if (!suggestions.isEmpty()) {
+                    throw new IllegalArgumentException("Unknown type: " + typeName + ". Did you mean: " + String.join(", ", suggestions) + "? Valid types: " + VALID_TYPES);
+                }
+                throw new IllegalArgumentException("Unknown type: " + typeName + ". Valid types: " + VALID_TYPES);
+            }
         };
     }
 
@@ -135,18 +143,41 @@ public class DefaultParser implements Parser{
             tableName = tableToken.getValue();
         }
 
-        // Опциональный список колонок
+        // Опциональный список колонок или сразу values в скобках (эвристика)
         List<String> columns = null;
+        List<String> values = null;
         if (curPosition < tokens.size() && currentToken().getType().equals("LPAREN")) {
             match("LPAREN");
-            columns = parseColumnNames();
-            match("RPAREN");
+            // Если внутри скобок первый токен — STRING/NUMBER или IDENT(NULL/TRUE/FALSE) — считаем это списком значений
+            if (curPosition < tokens.size()) {
+                Token firstInside = currentToken();
+                String t = firstInside.getType();
+                boolean looksLikeValue = t.equals("STRING") || t.equals("NUMBER") || (t.equals("IDENT") && (
+                        firstInside.getValue().equalsIgnoreCase("NULL") ||
+                        firstInside.getValue().equalsIgnoreCase("TRUE") ||
+                        firstInside.getValue().equalsIgnoreCase("FALSE")
+                ));
+                if (looksLikeValue) {
+                    // Это values без ключевого слова VALUES
+                    values = parseValues();
+                    match("RPAREN");
+                    // done — no explicit VALUES keyword
+                    return new InsertStmt(schemaName, tableName, null, values);
+                } else {
+                    // Парсим имена колонок
+                    columns = parseColumnNames();
+                    match("RPAREN");
+                }
+            } else {
+                throw new IllegalArgumentException("Empty parentheses after table name in INSERT");
+            }
         }
 
+        // Ожидаем VALUES если мы ещё не прочитали values
         match("VALUES");
         match("LPAREN");
 
-        List<String> values = parseValues();
+        values = parseValues();
 
         match("RPAREN");
 
@@ -157,7 +188,23 @@ public class DefaultParser implements Parser{
         List<String> columns = new ArrayList<>();
 
         while (curPosition < tokens.size()) {
-            Token columnToken = expectToken("IDENT");
+            Token token = currentToken();
+            if (!token.getType().equals("IDENT")) {
+                // Была встречена строка/число там, где ожидалось имя колонки — подсказка
+                if (token.getType().equals("STRING")) {
+                    throw new IllegalArgumentException("Expected column name but got STRING (" + token.getValue() + ").\n" +
+                            "If you intended to insert values, either use the VALUES keyword before the values list,\n" +
+                            "or remove quotes to specify column names. To insert a string literal use quotes: '...'.");
+                } else if (token.getType().equals("NUMBER")) {
+                    throw new IllegalArgumentException("Expected column name but got NUMBER (" + token.getValue() + ").\n" +
+                            "If you intended to insert values, either use the VALUES keyword before the values list,\n" +
+                            "or provide valid column identifiers.");
+                } else {
+                    throw new IllegalArgumentException("Expected column name but got " + token.getType() + " (" + token.getValue() + ")");
+                }
+            }
+
+            Token columnToken = match("IDENT");
             columns.add(columnToken.getValue());
 
             if (curPosition < tokens.size() && currentToken().getType().equals("COMMA")) {
@@ -186,8 +233,12 @@ public class DefaultParser implements Parser{
                             valueToken.getValue().equalsIgnoreCase("TRUE") ||
                             valueToken.getValue().equalsIgnoreCase("FALSE"))) {
                 value = valueToken.getValue();
+            } else if (valueToken.getType().equals("IDENT")) {
+                // IDENT встретился в списке значений, но это не NULL/TRUE/FALSE — возможно пользователь забыл кавычки
+                throw new IllegalArgumentException("Unexpected IDENT value: " + valueToken.getValue() + ".\n" +
+                        "If you intended a string literal, surround it with single or double quotes, e.g. '" + valueToken.getValue() + "'.");
             } else {
-                throw new IllegalArgumentException("Unexpected value token: " + valueToken);
+                throw new IllegalArgumentException("Unexpected value token: " + valueToken + ". Expected STRING, NUMBER or NULL/TRUE/FALSE.");
             }
 
             values.add(value);
@@ -322,5 +373,49 @@ public class DefaultParser implements Parser{
             return token;
         }
         throw new RuntimeException("Ожидался токен: " + expectedType + " , но получен токен:  " + token.getType());
+    }
+
+    // Suggest similar known types for a friendlier error message
+    private java.util.List<String> suggestTypes(String typeName) {
+        String[] known = {"integer","int","bigint","varchar","text","boolean","bool"};
+        java.util.List<String> res = new ArrayList<>();
+        String s = typeName.toLowerCase();
+        for (String k : known) {
+            String kl = k.toLowerCase();
+            if (kl.equals(s)) continue;
+            // prefix match is a good hint
+            if (kl.startsWith(s) || s.startsWith(kl) || kl.startsWith(s.replaceAll("[^a-z]", ""))) {
+                res.add(k);
+                continue;
+            }
+            // small Levenshtein distance
+            int d = levenshtein(s, kl);
+            if (d <= 2) res.add(k);
+        }
+        return res;
+    }
+
+    // Standard Levenshtein distance (iterative, O(n*m) time, O(min(n,m)) space)
+    private int levenshtein(String a, String b) {
+        if (a.equals(b)) return 0;
+        if (a.length() == 0) return b.length();
+        if (b.length() == 0) return a.length();
+        if (a.length() < b.length()) {
+            // ensure a is longer
+            String tmp = a; a = b; b = tmp;
+        }
+        int[] prev = new int[b.length() + 1];
+        int[] cur = new int[b.length() + 1];
+        for (int j = 0; j <= b.length(); j++) prev[j] = j;
+        for (int i = 1; i <= a.length(); i++) {
+            cur[0] = i;
+            char ca = a.charAt(i - 1);
+            for (int j = 1; j <= b.length(); j++) {
+                int cost = (ca == b.charAt(j - 1)) ? 0 : 1;
+                cur[j] = Math.min(Math.min(cur[j - 1] + 1, prev[j] + 1), prev[j - 1] + cost);
+            }
+            int[] t = prev; prev = cur; cur = t;
+        }
+        return prev[b.length()];
     }
 }

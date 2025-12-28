@@ -13,10 +13,18 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DefaultOperationManager implements OperationManager {
     private static final int PAGE_SIZE = 8192;
     private final CatalogManager catalogManager;
+
+    // Cache last known writable page per table OID (to avoid scanning file each insert)
+    private final Map<Integer, Integer> lastWritablePage = new HashMap<>(); // tableOid -> pageId
+    private final Map<Integer, Integer> lastWritableFree = new HashMap<>(); // tableOid -> available bytes for payload
+
+    // For tests/diagnostics: how many page checks (scans) we did per table
+    private final Map<Integer, AtomicInteger> scanCounter = new HashMap<>();
 
     public DefaultOperationManager(CatalogManager catalogManager) {
         this.catalogManager = catalogManager;
@@ -36,33 +44,169 @@ public class DefaultOperationManager implements OperationManager {
 
         byte[] rowData = serializeRow(values, columns);
 
-        byte[] pageBytes = readPage(table);
-        HeapPage page = new HeapPage(0, pageBytes);
-        if (!page.isValid()) {
-            page = new HeapPage(0);
-            pageBytes = page.bytes();
+        Path path = resolveDataPath(table);
+        File file = path.toFile();
+
+        // Ensure file exists (create initial empty page if needed)
+        try {
+            if (!file.exists()) {
+                file.createNewFile();
+                try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+                    raf.setLength(0);
+                    raf.write(createEmptyHeapPageBytes());
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to ensure data file: " + path, e);
         }
 
-        try {
-            page.write(rowData);
-        } catch (IllegalArgumentException e) {
-            // сохраняем внешний контракт/сообщение для CLI
+        boolean written = false;
+        int tableOid = table.getOid();
+        scanCounter.computeIfAbsent(tableOid, k -> new AtomicInteger(0));
+
+        try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+            long fileSize = raf.length();
+            int pagesCount = (int) (fileSize / PAGE_SIZE);
+
+            // 1) Try cached page first (only if hint indicates it may fit)
+            Integer cachedPage = lastWritablePage.get(tableOid);
+            Integer cachedFree = lastWritableFree.get(tableOid);
+            if (cachedPage != null && cachedPage >= 0 && cachedPage < Math.max(1, pagesCount)) {
+                if (cachedFree != null && cachedFree >= rowData.length) {
+                    int pid = cachedPage;
+                    raf.seek(((long) pid) * PAGE_SIZE);
+                    byte[] page = new byte[PAGE_SIZE];
+                    int bytesRead = raf.read(page);
+                    if (bytesRead < PAGE_SIZE) {
+                        Arrays.fill(page, bytesRead < 0 ? 0 : bytesRead, PAGE_SIZE, (byte) 0);
+                    }
+                    HeapPage hp = new HeapPage(pid, page);
+                    if (!hp.isValid()) hp = new HeapPage(pid);
+                    try {
+                        hp.write(rowData);
+                        raf.seek(((long) pid) * PAGE_SIZE);
+                        raf.write(hp.bytes());
+                        written = true;
+                        // update free hint
+                        int newFree = computeFreeSpace(hp.bytes());
+                        lastWritableFree.put(tableOid, newFree);
+                        lastWritablePage.put(tableOid, pid);
+                    } catch (IllegalArgumentException ignored) {
+                        // cache miss — will fallback to scan
+                        lastWritablePage.remove(tableOid);
+                        lastWritableFree.remove(tableOid);
+                    }
+                } else {
+                    // Hint says it won't fit, skip direct attempt
+                }
+            }
+
+            // 2) Scan pages if cache miss
+            if (!written) {
+                for (int pid = 0; pid < pagesCount; pid++) {
+                    // count this page check
+                    scanCounter.get(tableOid).incrementAndGet();
+
+                    raf.seek(((long) pid) * PAGE_SIZE);
+                    byte[] page = new byte[PAGE_SIZE];
+                    int bytesRead = raf.read(page);
+                    if (bytesRead < PAGE_SIZE) {
+                        Arrays.fill(page, bytesRead < 0 ? 0 : bytesRead, PAGE_SIZE, (byte) 0);
+                    }
+
+                    HeapPage hp = new HeapPage(pid, page);
+                    if (!hp.isValid()) {
+                        hp = new HeapPage(pid);
+                    }
+
+                    try {
+                        hp.write(rowData);
+                        raf.seek(((long) pid) * PAGE_SIZE);
+                        raf.write(hp.bytes());
+                        written = true;
+                        // update cache
+                        int free = computeFreeSpace(hp.bytes());
+                        lastWritablePage.put(tableOid, pid);
+                        lastWritableFree.put(tableOid, free);
+                        break;
+                    } catch (IllegalArgumentException ignored) {
+                        // not enough space on this page, try next
+                    }
+                }
+            }
+
+            // 3) Append new page if still not written
+            if (!written) {
+                int newId = pagesCount;
+                HeapPage newPage = new HeapPage(newId);
+                newPage.write(rowData); // should fit into empty page
+                raf.seek(raf.length());
+                raf.write(newPage.bytes());
+                written = true;
+                int free = computeFreeSpace(newPage.bytes());
+                lastWritablePage.put(tableOid, newId);
+                lastWritableFree.put(tableOid, free);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to write page for table " + tableName, e);
+        }
+
+        if (!written) {
             throw new IllegalStateException("No space in page");
         }
+    }
 
-        // ВАЖНО: HeapPage.write() изменяет внутренний ByteBuffer, который обёрнут над pageBytes,
-        // поэтому pageBytes теперь содержит актуальные данные. Писать нужно именно его.
-        writePage(table, pageBytes);
+    // helper: compute available payload bytes for a page
+    private int computeFreeSpace(byte[] page) {
+        ByteBuffer buf = ByteBuffer.wrap(page).order(ByteOrder.LITTLE_ENDIAN);
+        int lower = buf.getShort(6) & 0xFFFF;
+        int upper = buf.getShort(8) & 0xFFFF;
+        int free = (upper - lower) - 4; // need 4 bytes for slot
+        return Math.max(0, free);
+    }
+
+    // Expose scan counter for tests
+    public int getScanCountForTable(int tableOid) {
+        AtomicInteger ai = scanCounter.get(tableOid);
+        return ai == null ? 0 : ai.get();
     }
 
     private byte[] serializeRow(List<Object> values, List<ColumnDefinition> columns) {
-        ByteBuffer buffer = ByteBuffer.allocate(PAGE_SIZE).order(ByteOrder.LITTLE_ENDIAN);
+        // conservative maximum payload that can fit into an empty page:
+        // HeapPage initial: lower=10, upper=PAGE_SIZE -> usable = PAGE_SIZE - 10
+        // we also need 4 bytes for slot entry, so max payload ~= PAGE_SIZE - 14
+        final int MAX_PAYLOAD = PAGE_SIZE - 14;
 
+        // First pass: compute required payload size
+        int required = 0;
+        for (int i = 0; i < values.size(); i++) {
+            TypeDefinition type = getType(columns.get(i).getTypeOid());
+            String tn = type.name().toLowerCase();
+            switch (tn) {
+                case "integer": required += Integer.BYTES; break;
+                case "bigint": required += Long.BYTES; break;
+                case "boolean": required += 1; break;
+                case "varchar": {
+                    String s = values.get(i) == null ? "" : values.get(i).toString();
+                    int len = s.getBytes(StandardCharsets.UTF_8).length;
+                    required += 2 + len; // short length + bytes
+                    break;
+                }
+                default: required += 0; break;
+            }
+        }
+
+        if (required > MAX_PAYLOAD) {
+            throw new IllegalArgumentException("Row is too large to fit in a single page (" + required + " bytes)");
+        }
+
+        ByteBuffer buffer = ByteBuffer.allocate(required).order(ByteOrder.LITTLE_ENDIAN);
         for (int i = 0; i < values.size(); i++) {
             Object value = values.get(i);
             TypeDefinition type = getType(columns.get(i).getTypeOid());
-
-            switch (type.name().toLowerCase()) {
+            String tn = type.name().toLowerCase();
+            switch (tn) {
                 case "integer":
                     buffer.putInt((Integer) value);
                     break;
@@ -72,12 +216,13 @@ public class DefaultOperationManager implements OperationManager {
                 case "boolean":
                     buffer.put((byte) ((Boolean) value ? 1 : 0));
                     break;
-                case "varchar":
-                    String str = (String) value;
+                case "varchar": {
+                    String str = value == null ? "" : value.toString();
                     byte[] strBytes = str.getBytes(StandardCharsets.UTF_8);
                     buffer.putShort((short) strBytes.length);
                     buffer.put(strBytes);
                     break;
+                }
             }
         }
 
@@ -149,15 +294,34 @@ public class DefaultOperationManager implements OperationManager {
         List<ColumnDefinition> selectedColumns = columnNames.isEmpty() ?
                 allColumns : getSelectedColumns(allColumns, columnNames);
 
-        byte[] pageBytes = readPage(table);
-        HeapPage page = new HeapPage(0, pageBytes);
-        if (page.isValid()) {
-            result.addAll(readHeapPageRows(page, selectedColumns, allColumns));
-        } else {
-            // fallback на старый формат (int size + payload)*
-            result.addAll(readPageRows(pageBytes, selectedColumns, allColumns));
-        }
+        Path path = resolveDataPath(table);
+        File file = path.toFile();
+        if (!file.exists()) return result;
 
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+            long fileSize = raf.length();
+            int pagesCount = (int) (fileSize / PAGE_SIZE);
+
+            for (int pid = 0; pid < pagesCount; pid++) {
+                raf.seek(((long) pid) * PAGE_SIZE);
+                byte[] pageBytes = new byte[PAGE_SIZE];
+                int bytesRead = raf.read(pageBytes);
+                if (bytesRead < PAGE_SIZE) {
+                    Arrays.fill(pageBytes, bytesRead < 0 ? 0 : bytesRead, PAGE_SIZE, (byte) 0);
+                }
+
+                HeapPage page = new HeapPage(pid, pageBytes);
+                if (page.isValid()) {
+                    result.addAll(readHeapPageRows(page, selectedColumns, allColumns));
+                } else {
+                    // fallback на старый формат (int size + payload)*
+                    result.addAll(readPageRows(pageBytes, selectedColumns, allColumns));
+                }
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read data file for table " + tableName, e);
+        }
 
         return result;
     }

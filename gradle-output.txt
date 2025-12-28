@@ -1,0 +1,140 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.12/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :clean
+> Task :compileJava
+> Task :processResources NO-SOURCE
+> Task :classes
+> Task :compileTestJava
+> Task :processTestResources NO-SOURCE
+> Task :testClasses
+
+> Task :test
+
+[0K[1mru.open.cu.student.InsertNoSpaceRegressionTest[m
+
+[0K[1m  Test [22minsertIntoNewTable_shouldNotFailWithNoSpaceInPage_andShouldBeReadable(Path)[32m PASSED[m
+
+[0K[1mru.open.cu.student.SimpleQueryExecutionTest[m
+
+[0K[1m  Test [22mtestOptimizer_CreateTable_WithValidTypes()[32m PASSED[m
+[0K[1m  Test [22mtestFullPipeline_CreateTable_WithValidTypes()[32m PASSED[m
+[0K[1m  Test [22mtestPlanner_CreateTable_WithValidTypes()[32m PASSED[m
+[0K[1m  Test [22mtestPlanner_Select_NonExistentTable()[32m PASSED[m
+[0K[1m  Test [22mtestMultipleCreateTables_WithValidTypes()[32m PASSED[m
+[0K[1m  Test [22mtestCatalogManager_DefaultTypesExist()[32m PASSED[m
+
+[0K[1mru.open.cu.student.StorageIntegrationTest[m
+
+[0K[1m  Test [22mendToEnd_writeReadPagesAndAppend(Path)[32m PASSED[m
+
+[0K[1mru.open.cu.student.catalog.manager.DefaultCatalogManagerTest[m
+
+[0K[1m  Test [22mtestGetNonExistentTable()[32m PASSED[m
+[0K[1m  Test [22mtestGetTable()[32m PASSED[m
+[0K[1m  Test [22mtestCreateTable()[32m PASSED[m
+[0K[1m  Test [22mtestGetType()[32m PASSED[m
+[0K[1m  Test [22mtestGetTableColumns()[32m PASSED[m
+[0K[1m  Test [22mtestListTables()[32m PASSED[m
+[0K[1m  Test [22mtestGetNonExistentColumn()[32m PASSED[m
+[0K[1m  Test [22mtestGetColumn()[32m PASSED[m
+[0K[1m  Test [22mtestCreateDuplicateTable()[32m PASSED[m
+
+[0K[1mru.open.cu.student.catalog.model.ColumnDefinitionTest[m
+
+[0K[1m  Test [22mtestColumnDefinitionSerialization()[32m PASSED[m
+[0K[1m  Test [22mtestColumnDefinitionInvalidArguments()[32m PASSED[m
+[0K[1m  Test [22mtestColumnDefinitionEquality()[32m PASSED[m
+[0K[1m  Test [22mtestColumnDefinitionCreation()[32m PASSED[m
+
+[0K[1mru.open.cu.student.catalog.model.TableDefinitionTest[m
+
+[0K[1m  Test [22mtestTableDefinitionCreation()[32m PASSED[m
+[0K[1m  Test [22mtestTableDefinitionSerialization()[32m PASSED[m
+[0K[1m  Test [22mtestTableDefinitionInvalidArguments()[32m PASSED[m
+[0K[1m  Test [22mtestTableDefinitionEquality()[32m PASSED[m
+
+[0K[1mru.open.cu.student.catalog.model.TypeDefinitionTest[m
+
+[0K[1m  Test [22mtestTypeDefinitionInvalidArguments()[32m PASSED[m
+[0K[1m  Test [22mtestTypeDefinitionSerialization()[32m PASSED[m
+[0K[1m  Test [22mtestTypeDefinitionCreation()[32m PASSED[m
+[0K[1m  Test [22mtestTypeDefinitionVariableLength()[32m PASSED[m
+[0K[1m  Test [22mtestTypeDefinitionEquality()[32m PASSED[m
+
+[0K[1mru.open.cu.student.lexer.DefaultLexerTest[m
+
+[0K[1m  Test [22mtestTokenizeNumbers()[32m PASSED[m
+[0K[1m  Test [22mtestTokenizeSelectQuery()[32m PASSED[m
+[0K[1m  Test [22mtestTokenizeOperators()[32m PASSED[m
+
+[0K[1mru.open.cu.student.memory.buffer.DefaultBufferPoolManagerTest[m
+
+[0K[1m  Test [22mupdatePage_notInBuffer_throws(Path)[32m PASSED[m
+[0K[1m  Test [22mflushAllPages_clearsAllDirty(Path)[32m PASSED[m
+[0K[1m  Test [22mflushPage_clearsDirtyFlag(Path)[32m PASSED[m
+[0K[1m  Test [22mgetPage_then_update_roundTrip(Path)[32m PASSED[m
+[0K[1m  Test [22mpin_then_unpin_works(Path)[32m PASSED[m
+
+[0K[1mru.open.cu.student.memory.io.DefaultDirtyPageWriterTest[m
+
+[0K[1m  Test [22mcheckPointer_flushesAllPages(Path)[32m PASSED[31m (10.6s)[m
+[0K[1m  Test [22mwriter_respectsMaxDirtyPagesLimit(Path)[32m PASSED[33m (1.4s)[m
+[0K[1m  Test [22mbackgroundWriter_flushesDirtyPages(Path)[32m PASSED[33m (1.3s)[m
+
+[0K[1mru.open.cu.student.memory.manager.HeapPageFileManagerTest[m
+
+[0K[1m  Test [22mwrite_then_read_roundTrip(Path)[32m PASSED[m
+[0K[1m  Test [22minvalid_signature_on_disk_throws(Path)[32m PASSED[m
+[0K[1m  Test [22mappend_negative_pageId_writes_to_end(Path)[32m PASSED[m
+[0K[1m  Test [22mread_page_out_of_bounds_throws(Path)[32m PASSED[m
+[0K[1m  Test [22mread_nonExisting_file_throws(Path)[32m PASSED[m
+
+[0K[1mru.open.cu.student.memory.page.HeapPageTest[m
+
+[0K[1m  Test [22mfill_until_full_then_throw()[32m PASSED[m
+[0K[1m  Test [22mnew_page_is_valid_and_fixed_size()[32m PASSED[m
+[0K[1m  Test [22msupports_various_record_sizes()[32m PASSED[m
+[0K[1m  Test [22mwrite_and_read_multiple_records_in_order()[32m PASSED[m
+
+[0K[1mru.open.cu.student.memory.replacer.ClockReplacerTest[m
+
+[0K[1m  Test [22mpush_existingSlot_setsRefBit()[32m PASSED[m
+[0K[1m  Test [22mpush_existingSlot_refBitBehavior()[32m PASSED[m
+
+[0K[1mru.open.cu.student.memory.replacer.LRUReplacerTest[m
+
+[0K[1m  Test [22mpickVictim_empty_returnsNull()[32m PASSED[m
+[0K[1m  Test [22mdelete_removesSlot()[32m PASSED[m
+[0K[1m  Test [22mpush_then_pickVictim_returnsLRU()[32m PASSED[m
+[0K[1m  Test [22mpush_existingSlot_movesToFront()[32m PASSED[m
+
+[0K[1mru.open.cu.student.memory.serializer.HeapTupleSerializerTest[m
+
+[0K[1m  Test [22mvarchar_255_bytes_boundary()[32m PASSED[m
+[0K[1m  Test [22mvarchar_roundTrip_basic_and_utf8()[32m PASSED[m
+[0K[1m  Test [22mlong_roundTrip_extremes()[32m PASSED[m
+
+[0K[1mru.open.cu.student.parser.DefaultParserTest[m
+
+[0K[1m  Test [22mtestParseSimpleSelect()[32m PASSED[m
+[0K[1m  Test [22mtestParseSelectWithWhere()[32m PASSED[m
+[0K[1m  Test [22mtestParseSelectMultipleColumns()[32m PASSED[m
+[0K[1m  Test [22mtestParseSelectStar()[32m PASSED[m
+
+[0K[1mru.open.cu.student.parser.DefaultParserTypeSuggestionTest[m
+
+[0K[1m  Test [22mparseCreateWithMisspelledTypeShouldProduceSuggestion()[32m PASSED[m
+
+[0K[1;32mSUCCESS: [39mExecuted 64 tests in 15.8s[m
+
+
+[Incubating] Problems report is available at: file:///home/yury-samohvalov/Projects/mini-db/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.12/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 37s
+4 actionable tasks: 4 executed
