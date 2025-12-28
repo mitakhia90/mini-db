@@ -53,8 +53,8 @@ public class SeqScanExecutor implements Executor {
             if (currentRowIndex < page.size()) {
                 byte[] rowData = page.read(currentRowIndex);
                 currentRowIndex++;
-                // deserialize according to columns
-                return deserializeRow(rowData);
+                // return raw bytes; downstream executors (Project/Filter) will deserialize
+                return rowData;
             } else {
                 currentPageId++;
                 currentRowIndex = 0;
@@ -66,7 +66,7 @@ public class SeqScanExecutor implements Executor {
         List<Object> row = new ArrayList<>();
         ByteBuffer buf = ByteBuffer.wrap(rowData).order(ByteOrder.LITTLE_ENDIAN);
 
-        if (columns == null) return List.of();
+        if (columns == null) return List.of((Object) rowData);
 
         for (ColumnDefinition col : columns) {
             TypeDefinition type = catalogManager.getType(col.getTypeOid());

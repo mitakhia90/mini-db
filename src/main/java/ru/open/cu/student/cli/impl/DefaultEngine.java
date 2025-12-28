@@ -32,6 +32,8 @@ import ru.open.cu.student.planner.node.LogicalPlanNode;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DefaultEngine implements Engine {
 
@@ -55,6 +57,40 @@ public class DefaultEngine implements Engine {
     @Override
     public String executeSql(String sql) {
         try {
+            if (sql == null) throw new IllegalArgumentException("sql is null");
+            String trimmed = sql.trim();
+
+            // HELP
+            if (trimmed.equalsIgnoreCase("help") || trimmed.equalsIgnoreCase("?")) {
+                return "Available commands:\n" +
+                        "CREATE TABLE <name>(...)\n" +
+                        "INSERT INTO <name> VALUES (...)\n" +
+                        "SELECT ... FROM <name> [WHERE ...]\n" +
+                        "DROP TABLE <name> [IF EXISTS]\n" +
+                        "DELETE FROM <name> WHERE <column> = <value>\n" +
+                        "LIST TABLES\n" +
+                        "HELP";
+            }
+
+            // LIST TABLES
+            if (trimmed.equalsIgnoreCase("list tables") || trimmed.matches("(?i)list\\s+tables.*")) {
+                List<TableDefinition> tables = catalog.listTables();
+                if (tables.isEmpty()) return "(no tables)";
+                return tables.stream().map(TableDefinition::getName).collect(Collectors.joining("\n"));
+            }
+
+            // Simple DELETE parsing: DELETE FROM <table> WHERE <column> = <value>
+            Pattern deletePattern = Pattern.compile("(?i)^\\s*delete\\s+from\\s+(\\w+)\\s+where\\s+(\\w+)\\s*=\\s*('?\"?)([^'\";]+)\\1.*");
+            Matcher delMatcher = deletePattern.matcher(trimmed);
+            if (delMatcher.matches()) {
+                String table = delMatcher.group(1);
+                String column = delMatcher.group(2);
+                String rawVal = delMatcher.group(4).trim();
+                Object val = parseLiteral(rawVal);
+                int deleted = opManager.delete(table, column, val);
+                return "OK, deleted=" + deleted;
+            }
+
             // 1) Lexer
             List<Token> tokens = lexer.tokenize(sql);
             log("TOKENS", tokens);
@@ -66,6 +102,24 @@ public class DefaultEngine implements Engine {
             // 3) SQL -> QueryTree
             var queryTree = sqlProcessor.process(sql);
             log("QUERY_TREE", queryTree);
+
+            // Handle DROP table immediately (no need to plan/execute)
+            if (queryTree != null && queryTree.commandType == ru.open.cu.student.ast.QueryType.DROP) {
+                if (queryTree.tableName == null || queryTree.tableName.isBlank()) {
+                    return "ERROR: Table name missing in DROP";
+                }
+                try {
+                    catalog.dropTable(queryTree.tableName);
+                    return "OK";
+                } catch (IllegalArgumentException e) {
+                    // If IF EXISTS specified — swallow error and return OK
+                    try {
+                        boolean ifExists = queryTree.dropIfExists;
+                        if (ifExists) return "OK";
+                    } catch (Exception ignored) { }
+                    throw e;
+                }
+            }
 
             // 4) Planner -> Logical plan
             LogicalPlanNode logical = planner.plan(queryTree);
@@ -134,8 +188,26 @@ public class DefaultEngine implements Engine {
                 return String.valueOf(r);
             }).collect(java.util.stream.Collectors.joining("\n"));
 
+
         } catch (Exception e) {
             return "ERROR: " + e.getMessage();
+        }
+    }
+
+    private Object parseLiteral(String rawVal) {
+        if (rawVal == null) return null;
+        String t = rawVal.trim();
+        if (t.equalsIgnoreCase("NULL")) return null;
+        if (t.equalsIgnoreCase("TRUE")) return Boolean.TRUE;
+        if (t.equalsIgnoreCase("FALSE")) return Boolean.FALSE;
+        try {
+            return Integer.parseInt(t);
+        } catch (NumberFormatException e) {
+            try {
+                return Long.parseLong(t);
+            } catch (NumberFormatException e2) {
+                return t;
+            }
         }
     }
 

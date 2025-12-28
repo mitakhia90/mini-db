@@ -73,6 +73,32 @@ public class DefaultCatalogManager implements CatalogManager {
     }
 
     @Override
+    public void dropTable(String tableName) {
+        if (tableName == null) return;
+        Integer oid = tableNameToOid.remove(tableName.toLowerCase());
+        if (oid == null) {
+            throw new IllegalArgumentException("Table not found: " + tableName);
+        }
+
+        // Remove table and columns from in-memory maps
+        TableDefinition removed = tables.remove(oid);
+        tableColumns.remove(oid);
+
+        // Delete data file if exists
+        String fileName = removed != null ? removed.getFileNode() : (oid + ".dat");
+        try {
+            if (fileName != null && !fileName.isBlank()) {
+                java.nio.file.Files.deleteIfExists(java.nio.file.Path.of(fileName));
+            }
+        } catch (Exception e) {
+            // ignore file deletion errors
+        }
+
+        // Note: persisted catalog files (table_definitions.dat etc.) are append-only in this simple implementation.
+        // Fully removing records from those files would require rewriting; keep it simple for now.
+    }
+
+    @Override
     public TableDefinition getTable(String tableName) {
         Integer oid = tableNameToOid.get(tableName.toLowerCase());
         return oid != null ? tables.get(oid) : null;

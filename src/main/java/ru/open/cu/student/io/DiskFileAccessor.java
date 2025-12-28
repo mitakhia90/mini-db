@@ -1,0 +1,96 @@
+package ru.open.cu.student.io;
+
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+
+public class DiskFileAccessor implements FileAccessor {
+    @Override
+    public void ensureFileExistsWithEmptyPage(Path path, int pageSize) throws IOException {
+        if (!Files.exists(path)) {
+            Files.createFile(path);
+            try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw")) {
+                raf.setLength(0);
+                raf.write(createEmptyHeapPage(pageSize));
+            }
+        } else {
+            // if exists but empty, initialize with one page
+            try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw")) {
+                if (raf.length() == 0) {
+                    raf.write(createEmptyHeapPage(pageSize));
+                }
+            }
+        }
+    }
+
+    private byte[] createEmptyHeapPage(int pageSize) {
+        byte[] page = new byte[pageSize];
+        ByteBuffer buf = ByteBuffer.wrap(page).order(ByteOrder.LITTLE_ENDIAN);
+        buf.putInt(0, 0xDBDB01);
+        buf.putShort(4, (short) 0);          // size = 0
+        buf.putShort(6, (short) 10);         // lower = HEADER_SIZE (10)
+        buf.putShort(8, (short) pageSize);   // upper = PAGE_SIZE
+        return page;
+    }
+
+    @Override
+    public byte[] readPage(Path path, int pageId, int pageSize) throws IOException {
+        if (!Files.exists(path)) {
+            return createEmptyHeapPage(pageSize);
+        }
+        try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "r")) {
+            long offset = ((long) pageId) * pageSize;
+            long fileLen = raf.length();
+            if (offset >= fileLen) {
+                // requested page is beyond EOF => return initialized empty page
+                return createEmptyHeapPage(pageSize);
+            }
+            raf.seek(offset);
+            byte[] page = new byte[pageSize];
+            int read = raf.read(page);
+            if (read <= 0) {
+                // nothing read -> return empty initialized page
+                return createEmptyHeapPage(pageSize);
+            }
+            if (read < pageSize) {
+                Arrays.fill(page, read, pageSize, (byte) 0);
+            }
+            return page;
+        }
+    }
+
+    @Override
+    public void writePage(Path path, int pageId, byte[] page) throws IOException {
+        try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw")) {
+            long offset = ((long) pageId) * page.length;
+            raf.seek(offset);
+            raf.write(page);
+        }
+    }
+
+    @Override
+    public int getPageCount(Path path, int pageSize) throws IOException {
+        if (!Files.exists(path)) return 0;
+        long len = Files.size(path);
+        return (int) (len / pageSize);
+    }
+
+    @Override
+    public int appendNewPage(Path path, byte[] page) throws IOException {
+        try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw")) {
+            long pages = raf.length() / page.length;
+            raf.seek(raf.length());
+            raf.write(page);
+            return (int) pages;
+        }
+    }
+
+    @Override
+    public boolean deleteIfExists(Path path) throws IOException {
+        return Files.deleteIfExists(path);
+    }
+}

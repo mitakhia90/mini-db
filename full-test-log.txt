@@ -1,0 +1,299 @@
+Initialized native services in: /home/yury-samohvalov/.gradle/native
+Initialized jansi services in: /home/yury-samohvalov/.gradle/native
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.12/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Starting process 'Gradle build daemon'. Working directory: /home/yury-samohvalov/.gradle/daemon/8.12 Command: /usr/lib/jvm/java-21-openjdk-amd64/bin/java --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-opens=java.base/java.nio.charset=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.xml/javax.xml.namespace=ALL-UNNAMED -XX:MaxMetaspaceSize=384m -XX:+HeapDumpOnOutOfMemoryError -Xms256m -Xmx512m -Dfile.encoding=UTF-8 -Duser.country=RU -Duser.language=ru -Duser.variant -cp /home/yury-samohvalov/.gradle/wrapper/dists/gradle-8.12-bin/cetblhg4pflnnks72fxwobvgv/gradle-8.12/lib/gradle-daemon-main-8.12.jar -javaagent:/home/yury-samohvalov/.gradle/wrapper/dists/gradle-8.12-bin/cetblhg4pflnnks72fxwobvgv/gradle-8.12/lib/agents/gradle-instrumentation-agent-8.12.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon 8.12
+Successfully started process 'Gradle build daemon'
+An attempt to start the daemon took 1.888 secs.
+The client will now receive all logging from the daemon (pid: 430466). The daemon log file: /home/yury-samohvalov/.gradle/daemon/8.12/daemon-430466.out.log
+Daemon will be stopped at the end of the build 
+Using 8 worker leases.
+Received JVM installation metadata from '/usr/lib/jvm/java-21-openjdk-amd64': {JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64, JAVA_VERSION=21.0.9, JAVA_VENDOR=Ubuntu, RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=21.0.9+10-Ubuntu-124.04, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=21.0.9+10-Ubuntu-124.04, VM_VENDOR=Ubuntu, OS_ARCH=amd64}
+Watching the file system is configured to be enabled if available
+Now considering [/home/yury-samohvalov/Projects/mini-db] as hierarchies to watch
+File system watching is active
+Starting Build
+Settings evaluated using settings file '/home/yury-samohvalov/Projects/mini-db/settings.gradle'.
+Projects loaded. Root project using build file '/home/yury-samohvalov/Projects/mini-db/build.gradle'.
+Included projects: [root project 'di-practice']
+
+> Configure project :
+Evaluating root project 'di-practice' using build file '/home/yury-samohvalov/Projects/mini-db/build.gradle'.
+Resolved plugin [id: 'java']
+Resolved plugin [id: 'com.adarshr.test-logger', version: '4.0.0']
+All projects evaluated.
+Task name matched 'clean'
+Task name matched 'test'
+Selected primary task 'clean' from project :
+Selected primary task 'test' from project :
+Starting process 'command '/home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java''. Working directory: /home/yury-samohvalov/.gradle/.tmp/tmp-jvm1438222343436859395probe Command: /home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command '/home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java''
+Received JVM installation metadata from '/home/yury-samohvalov/.jdks/corretto-21.0.9': {JAVA_HOME=/home/yury-samohvalov/.jdks/corretto-21.0.9, JAVA_VERSION=21.0.9, JAVA_VENDOR=Amazon.com Inc., RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=21.0.9+11-LTS, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=21.0.9+11-LTS, VM_VENDOR=Amazon.com Inc., OS_ARCH=amd64}
+Tasks to be executed: [task ':clean', task ':compileJava', task ':processResources', task ':classes', task ':compileTestJava', task ':processTestResources', task ':testClasses', task ':test']
+Tasks that were excluded: []
+Resolve mutations for :clean (Thread[#77,Execution worker,5,main]) started.
+:clean (Thread[#77,Execution worker,5,main]) started.
+destroyer locations for task group 0 (Thread[#76,included builds,5,main]) started.
+
+> Task :clean
+Caching disabled for task ':clean' because:
+  Build cache is disabled
+Task ':clean' is not up-to-date because:
+  Task has not declared any outputs despite executing actions.
+Resolve mutations for :compileJava (Thread[#77,Execution worker,5,main]) started.
+:compileJava (Thread[#77,Execution worker,5,main]) started.
+This JVM does not support getting OS memory, so no OS memory status updates will be broadcast
+
+> Task :compileJava
+Caching disabled for task ':compileJava' because:
+  Build cache is disabled
+Task ':compileJava' is not up-to-date because:
+  Output property 'destinationDirectory' file /home/yury-samohvalov/Projects/mini-db/build/classes/java/main has been removed.
+  Output property 'destinationDirectory' file /home/yury-samohvalov/Projects/mini-db/build/classes/java/main/ru has been removed.
+  Output property 'destinationDirectory' file /home/yury-samohvalov/Projects/mini-db/build/classes/java/main/ru/open has been removed.
+  and more...
+The input changes require a full rebuild for incremental task ':compileJava'.
+Compilation mode: default, forking compiler
+Full recompilation is required because no incremental change information is available. This is usually caused by clean builds or changing compiler arguments.
+Compiling with toolchain '/home/yury-samohvalov/.jdks/corretto-21.0.9'.
+Starting process 'Gradle Worker Daemon 1'. Working directory: /home/yury-samohvalov/.gradle/workers Command: /home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED @/home/yury-samohvalov/.gradle/.tmp/gradle-worker-classpath4445027088341116130txt -Xmx512m -Dfile.encoding=UTF-8 -Duser.country=RU -Duser.language=ru -Duser.variant worker.org.gradle.process.internal.worker.GradleWorkerMain 'Gradle Worker Daemon 1'
+Successfully started process 'Gradle Worker Daemon 1'
+Started Gradle worker daemon (0.526 secs) with fork options DaemonForkOptions{executable=/home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java, minHeapSize=null, maxHeapSize=null, jvmArgs=[--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED, --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED], keepAliveMode=DAEMON}.
+Compiling with JDK Java compiler API.
+Class dependency analysis for incremental compilation took 0.178 secs.
+Created classpath snapshot for incremental compilation in 0.006 secs.
+Resolve mutations for :processResources (Thread[#77,Execution worker,5,main]) started.
+:processResources (Thread[#77,Execution worker,5,main]) started.
+
+> Task :processResources NO-SOURCE
+Skipping task ':processResources' as it has no source files and no previous output files.
+Resolve mutations for :classes (Thread[#77,Execution worker,5,main]) started.
+:classes (Thread[#77,Execution worker,5,main]) started.
+
+> Task :classes
+Skipping task ':classes' as it has no actions.
+Resolve mutations for :compileTestJava (Thread[#77,Execution worker,5,main]) started.
+:compileTestJava (Thread[#77,Execution worker,5,main]) started.
+
+> Task :compileTestJava
+Caching disabled for task ':compileTestJava' because:
+  Build cache is disabled
+Task ':compileTestJava' is not up-to-date because:
+  Output property 'destinationDirectory' file /home/yury-samohvalov/Projects/mini-db/build/classes/java/test has been removed.
+  Output property 'destinationDirectory' file /home/yury-samohvalov/Projects/mini-db/build/classes/java/test/ru has been removed.
+  Output property 'destinationDirectory' file /home/yury-samohvalov/Projects/mini-db/build/classes/java/test/ru/open has been removed.
+  and more...
+The input changes require a full rebuild for incremental task ':compileTestJava'.
+Compilation mode: default, forking compiler
+Full recompilation is required because no incremental change information is available. This is usually caused by clean builds or changing compiler arguments.
+Compiling with toolchain '/home/yury-samohvalov/.jdks/corretto-21.0.9'.
+Compiling with JDK Java compiler API.
+Class dependency analysis for incremental compilation took 0.037 secs.
+Created classpath snapshot for incremental compilation in 0.022 secs.
+Resolve mutations for :processTestResources (Thread[#77,Execution worker,5,main]) started.
+:processTestResources (Thread[#77,Execution worker,5,main]) started.
+
+> Task :processTestResources NO-SOURCE
+Skipping task ':processTestResources' as it has no source files and no previous output files.
+Resolve mutations for :testClasses (Thread[#77,Execution worker,5,main]) started.
+:testClasses (Thread[#77,Execution worker,5,main]) started.
+
+> Task :testClasses
+Skipping task ':testClasses' as it has no actions.
+Resolve mutations for :test (Thread[#77,Execution worker,5,main]) started.
+:test (Thread[#77,Execution worker,5,main]) started.
+Gradle Test Executor 2 started executing tests.
+
+> Task :test
+Caching disabled for task ':test' because:
+  Build cache is disabled
+Task ':test' is not up-to-date because:
+  Value of input property 'filter.commandLineIncludePatterns' has changed for task ':test'
+
+Starting process 'Gradle Test Executor 2'. Working directory: /home/yury-samohvalov/Projects/mini-db Command: /usr/lib/jvm/java-21-openjdk-amd64/bin/java -Dorg.gradle.internal.worker.tmpdir=/home/yury-samohvalov/Projects/mini-db/build/tmp/test/work @/home/yury-samohvalov/.gradle/.tmp/gradle-worker-classpath913195178306072859txt -Xmx512m -Dfile.encoding=UTF-8 -Duser.country=RU -Duser.language=ru -Duser.variant -ea worker.org.gradle.process.internal.worker.GradleWorkerMain 'Gradle Test Executor 2'
+Successfully started process 'Gradle Test Executor 2'
+[0K[1mru.open.cu.student.InsertNoSpaceRegressionTest[m
+
+[0K[1m  Test [22minsertIntoNewTable_shouldNotFailWithNoSpaceInPage_andShouldBeReadable(Path)[31m FAILED[31m
+
+  org.opentest4j.AssertionFailedError: expected: <1> but was: <76>
+      at app//ru.open.cu.student.InsertNoSpaceRegressionTest.insertIntoNewTable_shouldNotFailWithNoSpaceInPage_andShouldBeReadable(InsertNoSpaceRegressionTest.java:47)
+[m
+
+InsertNoSpaceRegressionTest > insertIntoNewTable_shouldNotFailWithNoSpaceInPage_andShouldBeReadable(Path) FAILED
+    org.opentest4j.AssertionFailedError: expected: <1> but was: <76>
+        at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+        at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+        at app//org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+        at app//org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+        at app//org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:145)
+        at app//org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:527)
+        at app//ru.open.cu.student.InsertNoSpaceRegressionTest.insertIntoNewTable_shouldNotFailWithNoSpaceInPage_andShouldBeReadable(InsertNoSpaceRegressionTest.java:47)
+
+[0K[1mru.open.cu.student.OperationManagerCacheBehaviorTest[m
+
+[0K[1m  Test [22mrepeatedInsertsUseCacheAndAvoidFullScan(Path)[32m PASSED[m
+
+[0K[1mru.open.cu.student.OperationManagerInsertBoundaryTest[m
+
+[0K[1m  Test [22mappendNewPageWhenFull(Path)[31m FAILED[31m
+
+  org.opentest4j.AssertionFailedError: Number of rows read should match inserted count ==> expected: <75> but was: <76>
+      at app//ru.open.cu.student.OperationManagerInsertBoundaryTest.appendNewPageWhenFull(OperationManagerInsertBoundaryTest.java:59)
+[m
+
+OperationManagerInsertBoundaryTest > appendNewPageWhenFull(Path) FAILED
+    org.opentest4j.AssertionFailedError: Number of rows read should match inserted count ==> expected: <75> but was: <76>
+        at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+        at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+        at app//org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+        at app//org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+        at app//org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:559)
+        at app//ru.open.cu.student.OperationManagerInsertBoundaryTest.appendNewPageWhenFull(OperationManagerInsertBoundaryTest.java:59)
+[0K[1m  Test [22minsertTooLargeRowThrows(Path)[32m PASSED[m
+
+[0K[1mru.open.cu.student.SimpleQueryExecutionTest[m
+
+[0K[1m  Test [22mtestOptimizer_CreateTable_WithValidTypes()[32m PASSED[m
+[0K[1m  Test [22mtestFullPipeline_CreateTable_WithValidTypes()[32m PASSED[m
+[0K[1m  Test [22mtestPlanner_CreateTable_WithValidTypes()[32m PASSED[m
+[0K[1m  Test [22mtestPlanner_Select_NonExistentTable()[32m PASSED[m
+[0K[1m  Test [22mtestMultipleCreateTables_WithValidTypes()[32m PASSED[m
+[0K[1m  Test [22mtestCatalogManager_DefaultTypesExist()[32m PASSED[m
+
+[0K[1mru.open.cu.student.StorageCliIntegrationTest[m
+
+[0K[1m  Test [22mcreateInsertSelect_shouldWork(Path)[32m PASSED[m
+
+[0K[1mru.open.cu.student.StorageIntegrationTest[m
+
+[0K[1m  Test [22mendToEnd_writeReadPagesAndAppend(Path)[32m PASSED[m
+
+[0K[1mru.open.cu.student.catalog.manager.DefaultCatalogManagerTest[m
+
+[0K[1m  Test [22mtestGetNonExistentTable()[32m PASSED[m
+[0K[1m  Test [22mtestGetTable()[32m PASSED[m
+[0K[1m  Test [22mtestCreateTable()[32m PASSED[m
+[0K[1m  Test [22mtestGetType()[32m PASSED[m
+[0K[1m  Test [22mtestGetTableColumns()[32m PASSED[m
+[0K[1m  Test [22mtestListTables()[32m PASSED[m
+[0K[1m  Test [22mtestGetNonExistentColumn()[32m PASSED[m
+[0K[1m  Test [22mtestGetColumn()[32m PASSED[m
+[0K[1m  Test [22mtestCreateDuplicateTable()[32m PASSED[m
+
+[0K[1mru.open.cu.student.catalog.model.ColumnDefinitionTest[m
+
+[0K[1m  Test [22mtestColumnDefinitionSerialization()[32m PASSED[m
+[0K[1m  Test [22mtestColumnDefinitionInvalidArguments()[32m PASSED[m
+[0K[1m  Test [22mtestColumnDefinitionEquality()[32m PASSED[m
+[0K[1m  Test [22mtestColumnDefinitionCreation()[32m PASSED[m
+
+[0K[1mru.open.cu.student.catalog.model.TableDefinitionTest[m
+
+[0K[1m  Test [22mtestTableDefinitionCreation()[32m PASSED[m
+[0K[1m  Test [22mtestTableDefinitionSerialization()[32m PASSED[m
+[0K[1m  Test [22mtestTableDefinitionInvalidArguments()[32m PASSED[m
+[0K[1m  Test [22mtestTableDefinitionEquality()[32m PASSED[m
+
+[0K[1mru.open.cu.student.catalog.model.TypeDefinitionTest[m
+
+[0K[1m  Test [22mtestTypeDefinitionInvalidArguments()[32m PASSED[m
+[0K[1m  Test [22mtestTypeDefinitionSerialization()[32m PASSED[m
+[0K[1m  Test [22mtestTypeDefinitionCreation()[32m PASSED[m
+[0K[1m  Test [22mtestTypeDefinitionVariableLength()[32m PASSED[m
+[0K[1m  Test [22mtestTypeDefinitionEquality()[32m PASSED[m
+
+[0K[1mru.open.cu.student.lexer.DefaultLexerTest[m
+
+[0K[1m  Test [22mtestTokenizeNumbers()[32m PASSED[m
+[0K[1m  Test [22mtestTokenizeSelectQuery()[32m PASSED[m
+[0K[1m  Test [22mtestTokenizeOperators()[32m PASSED[m
+
+[0K[1mru.open.cu.student.memory.buffer.DefaultBufferPoolManagerTest[m
+
+[0K[1m  Test [22mupdatePage_notInBuffer_throws(Path)[32m PASSED[m
+[0K[1m  Test [22mflushAllPages_clearsAllDirty(Path)[32m PASSED[m
+[0K[1m  Test [22mflushPage_clearsDirtyFlag(Path)[32m PASSED[m
+[0K[1m  Test [22mgetPage_then_update_roundTrip(Path)[32m PASSED[m
+[0K[1m  Test [22mpin_then_unpin_works(Path)[32m PASSED[m
+
+[0K[1mru.open.cu.student.memory.io.DefaultDirtyPageWriterTest[m
+
+[0K[1m  Test [22mcheckPointer_flushesAllPages(Path)[32m PASSED[31m (10.6s)[m
+[0K[1m  Test [22mwriter_respectsMaxDirtyPagesLimit(Path)[32m PASSED[33m (1.3s)[m
+[0K[1m  Test [22mbackgroundWriter_flushesDirtyPages(Path)[32m PASSED[33m (1.3s)[m
+
+[0K[1mru.open.cu.student.memory.manager.HeapPageFileManagerTest[m
+
+[0K[1m  Test [22mwrite_then_read_roundTrip(Path)[32m PASSED[m
+[0K[1m  Test [22minvalid_signature_on_disk_throws(Path)[32m PASSED[m
+[0K[1m  Test [22mappend_negative_pageId_writes_to_end(Path)[32m PASSED[m
+[0K[1m  Test [22mread_page_out_of_bounds_throws(Path)[32m PASSED[m
+[0K[1m  Test [22mread_nonExisting_file_throws(Path)[32m PASSED[m
+
+[0K[1mru.open.cu.student.memory.page.HeapPageTest[m
+
+[0K[1m  Test [22mfill_until_full_then_throw()[32m PASSED[m
+[0K[1m  Test [22mnew_page_is_valid_and_fixed_size()[32m PASSED[m
+[0K[1m  Test [22msupports_various_record_sizes()[32m PASSED[m
+[0K[1m  Test [22mwrite_and_read_multiple_records_in_order()[32m PASSED[m
+
+[0K[1mru.open.cu.student.memory.replacer.ClockReplacerTest[m
+
+[0K[1m  Test [22mpush_existingSlot_setsRefBit()[32m PASSED[m
+[0K[1m  Test [22mpush_existingSlot_refBitBehavior()[32m PASSED[m
+
+Gradle Test Executor 2 finished executing tests.
+
+> Task :test FAILED
+
+[0K[1mru.open.cu.student.memory.replacer.LRUReplacerTest[m
+
+[0K[1m  Test [22mpickVictim_empty_returnsNull()[32m PASSED[m
+[0K[1m  Test [22mdelete_removesSlot()[32m PASSED[m
+[0K[1m  Test [22mpush_then_pickVictim_returnsLRU()[32m PASSED[m
+[0K[1m  Test [22mpush_existingSlot_movesToFront()[32m PASSED[m
+
+[0K[1mru.open.cu.student.memory.serializer.HeapTupleSerializerTest[m
+
+[0K[1m  Test [22mvarchar_255_bytes_boundary()[32m PASSED[m
+[0K[1m  Test [22mvarchar_roundTrip_basic_and_utf8()[32m PASSED[m
+[0K[1m  Test [22mlong_roundTrip_extremes()[32m PASSED[m
+
+[0K[1mru.open.cu.student.parser.DefaultParserTest[m
+
+[0K[1m  Test [22mtestParseSimpleSelect()[32m PASSED[m
+[0K[1m  Test [22mtestParseSelectWithWhere()[32m PASSED[m
+[0K[1m  Test [22mtestParseSelectMultipleColumns()[32m PASSED[m
+[0K[1m  Test [22mtestParseSelectStar()[32m PASSED[m
+
+[0K[1mru.open.cu.student.parser.DefaultParserTypeSuggestionTest[m
+
+[0K[1m  Test [22mparseCreateWithMisspelledTypeShouldProduceSuggestion()[32m PASSED[m
+
+[0K[1;31mFAILURE: [39mExecuted 68 tests in 15.2s (2 failed)[m
+
+
+68 tests completed, 2 failed
+Finished generating test XML results (0.047 secs) into: /home/yury-samohvalov/Projects/mini-db/build/test-results/test
+Generating HTML test report...
+Finished generating test html results (0.061 secs) into: /home/yury-samohvalov/Projects/mini-db/build/reports/tests/test
+
+[Incubating] Problems report is available at: file:///home/yury-samohvalov/Projects/mini-db/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':test'.
+> There were failing tests. See the report at: file:///home/yury-samohvalov/Projects/mini-db/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.12/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 35s
+4 actionable tasks: 4 executed
