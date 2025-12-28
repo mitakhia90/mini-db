@@ -12,6 +12,7 @@ import ru.open.cu.student.catalog.model.ColumnDefinition;
 import ru.open.cu.student.parser.nodes.CreateTableStmt;
 import ru.open.cu.student.parser.nodes.SelectStmt;
 import ru.open.cu.student.parser.nodes.InsertStmt;
+import ru.open.cu.student.parser.nodes.DropTableStmt;
 import ru.open.cu.student.ast.AConst;
 import ru.open.cu.student.ast.AExpr;
 
@@ -50,6 +51,7 @@ public class SqlProcessor {
      *  - CREATE TABLE t (col TYPE, ...)
      *  - INSERT INTO t VALUES (v1, v2, ...)
      *  - SELECT col1, col2 FROM t [WHERE col OP const]
+     *  - DROP TABLE t
      *
      * @param sql query text
      * @return QueryTree for planner
@@ -63,7 +65,7 @@ public class SqlProcessor {
         String first = tokens.get(0).getType();
 
         return switch (first) {
-            case "CREATE", "SELECT", "UPDATE", "INSERT" -> translateParsedAst(parser.parse(tokens));
+            case "CREATE", "SELECT", "UPDATE", "INSERT", "DROP" -> translateParsedAst(parser.parse(tokens));
             default -> throw new IllegalArgumentException("Unsupported statement: " + first);
         };
 
@@ -78,6 +80,9 @@ public class SqlProcessor {
         }
         if (ast instanceof InsertStmt is) {
             return translateInsert(is);
+        }
+        if (ast instanceof DropTableStmt ds) {
+            return translateDrop(ds);
         }
 
         throw new IllegalArgumentException("Unsupported AST node: " + ast.getClass().getSimpleName());
@@ -177,6 +182,15 @@ public class SqlProcessor {
             q.targetList.add(te);
         }
 
+        return q;
+    }
+
+    private QueryTree translateDrop(DropTableStmt ds) {
+        QueryTree q = new QueryTree();
+        q.commandType = QueryType.DROP;
+        q.tableName = ds.tableName;
+        q.dropIfExists = ds.ifExists;
+        q.rangeTable.add(new RangeVar(ds.schemaName, ds.tableName, null));
         return q;
     }
 

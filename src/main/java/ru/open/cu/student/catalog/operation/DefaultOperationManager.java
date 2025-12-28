@@ -5,6 +5,8 @@ import ru.open.cu.student.catalog.model.TableDefinition;
 import ru.open.cu.student.catalog.model.ColumnDefinition;
 import ru.open.cu.student.catalog.model.TypeDefinition;
 import ru.open.cu.student.memory.page.HeapPage;
+import ru.open.cu.student.io.FileAccessor;
+import ru.open.cu.student.io.DiskFileAccessor;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -18,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class DefaultOperationManager implements OperationManager {
     private static final int PAGE_SIZE = 8192;
     private final CatalogManager catalogManager;
+    private final FileAccessor fileAccessor;
 
     // Cache last known writable page per table OID (to avoid scanning file each insert)
     private final Map<Integer, Integer> lastWritablePage = new HashMap<>(); // tableOid -> pageId
@@ -27,7 +30,13 @@ public class DefaultOperationManager implements OperationManager {
     private final Map<Integer, AtomicInteger> scanCounter = new HashMap<>();
 
     public DefaultOperationManager(CatalogManager catalogManager) {
+        this(catalogManager, new DiskFileAccessor());
+    }
+
+    // New constructor for testability
+    public DefaultOperationManager(CatalogManager catalogManager, FileAccessor fileAccessor) {
         this.catalogManager = catalogManager;
+        this.fileAccessor = fileAccessor;
     }
 
     @Override
@@ -45,17 +54,10 @@ public class DefaultOperationManager implements OperationManager {
         byte[] rowData = serializeRow(values, columns);
 
         Path path = resolveDataPath(table);
-        File file = path.toFile();
 
         // Ensure file exists (create initial empty page if needed)
         try {
-            if (!file.exists()) {
-                file.createNewFile();
-                try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
-                    raf.setLength(0);
-                    raf.write(createEmptyHeapPageBytes());
-                }
-            }
+            fileAccessor.ensureFileExistsWithEmptyPage(path, PAGE_SIZE);
         } catch (IOException e) {
             throw new RuntimeException("Failed to ensure data file: " + path, e);
         }
@@ -64,9 +66,8 @@ public class DefaultOperationManager implements OperationManager {
         int tableOid = table.getOid();
         scanCounter.computeIfAbsent(tableOid, k -> new AtomicInteger(0));
 
-        try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
-            long fileSize = raf.length();
-            int pagesCount = (int) (fileSize / PAGE_SIZE);
+        try {
+            int pagesCount = fileAccessor.getPageCount(path, PAGE_SIZE);
 
             // 1) Try cached page first (only if hint indicates it may fit)
             Integer cachedPage = lastWritablePage.get(tableOid);
@@ -74,18 +75,12 @@ public class DefaultOperationManager implements OperationManager {
             if (cachedPage != null && cachedPage >= 0 && cachedPage < Math.max(1, pagesCount)) {
                 if (cachedFree != null && cachedFree >= rowData.length) {
                     int pid = cachedPage;
-                    raf.seek(((long) pid) * PAGE_SIZE);
-                    byte[] page = new byte[PAGE_SIZE];
-                    int bytesRead = raf.read(page);
-                    if (bytesRead < PAGE_SIZE) {
-                        Arrays.fill(page, bytesRead < 0 ? 0 : bytesRead, PAGE_SIZE, (byte) 0);
-                    }
+                    byte[] page = fileAccessor.readPage(path, pid, PAGE_SIZE);
                     HeapPage hp = new HeapPage(pid, page);
                     if (!hp.isValid()) hp = new HeapPage(pid);
                     try {
                         hp.write(rowData);
-                        raf.seek(((long) pid) * PAGE_SIZE);
-                        raf.write(hp.bytes());
+                        fileAccessor.writePage(path, pid, hp.bytes());
                         written = true;
                         // update free hint
                         int newFree = computeFreeSpace(hp.bytes());
@@ -107,12 +102,7 @@ public class DefaultOperationManager implements OperationManager {
                     // count this page check
                     scanCounter.get(tableOid).incrementAndGet();
 
-                    raf.seek(((long) pid) * PAGE_SIZE);
-                    byte[] page = new byte[PAGE_SIZE];
-                    int bytesRead = raf.read(page);
-                    if (bytesRead < PAGE_SIZE) {
-                        Arrays.fill(page, bytesRead < 0 ? 0 : bytesRead, PAGE_SIZE, (byte) 0);
-                    }
+                    byte[] page = fileAccessor.readPage(path, pid, PAGE_SIZE);
 
                     HeapPage hp = new HeapPage(pid, page);
                     if (!hp.isValid()) {
@@ -121,8 +111,7 @@ public class DefaultOperationManager implements OperationManager {
 
                     try {
                         hp.write(rowData);
-                        raf.seek(((long) pid) * PAGE_SIZE);
-                        raf.write(hp.bytes());
+                        fileAccessor.writePage(path, pid, hp.bytes());
                         written = true;
                         // update cache
                         int free = computeFreeSpace(hp.bytes());
@@ -137,11 +126,10 @@ public class DefaultOperationManager implements OperationManager {
 
             // 3) Append new page if still not written
             if (!written) {
-                int newId = pagesCount;
-                HeapPage newPage = new HeapPage(newId);
+                int newId;
+                HeapPage newPage = new HeapPage(0);
                 newPage.write(rowData); // should fit into empty page
-                raf.seek(raf.length());
-                raf.write(newPage.bytes());
+                newId = fileAccessor.appendNewPage(path, newPage.bytes());
                 written = true;
                 int free = computeFreeSpace(newPage.bytes());
                 lastWritablePage.put(tableOid, newId);
@@ -295,20 +283,12 @@ public class DefaultOperationManager implements OperationManager {
                 allColumns : getSelectedColumns(allColumns, columnNames);
 
         Path path = resolveDataPath(table);
-        File file = path.toFile();
-        if (!file.exists()) return result;
 
-        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-            long fileSize = raf.length();
-            int pagesCount = (int) (fileSize / PAGE_SIZE);
+        try {
+            int pagesCount = fileAccessor.getPageCount(path, PAGE_SIZE);
 
             for (int pid = 0; pid < pagesCount; pid++) {
-                raf.seek(((long) pid) * PAGE_SIZE);
-                byte[] pageBytes = new byte[PAGE_SIZE];
-                int bytesRead = raf.read(pageBytes);
-                if (bytesRead < PAGE_SIZE) {
-                    Arrays.fill(pageBytes, bytesRead < 0 ? 0 : bytesRead, PAGE_SIZE, (byte) 0);
-                }
+                byte[] pageBytes = fileAccessor.readPage(path, pid, PAGE_SIZE);
 
                 HeapPage page = new HeapPage(pid, pageBytes);
                 if (page.isValid()) {
@@ -364,25 +344,8 @@ public class DefaultOperationManager implements OperationManager {
 
     private byte[] readPage(TableDefinition table) {
         Path path = resolveDataPath(table);
-        File file = path.toFile();
-        if (!file.exists()) {
-            return createEmptyHeapPageBytes();
-        }
-
-        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-            if (0 >= raf.length()) {
-                // page beyond file size -> return empty initialized page
-                return createEmptyHeapPageBytes();
-            }
-
-            raf.seek(0);
-            byte[] page = new byte[PAGE_SIZE];
-            int bytesRead = raf.read(page);
-
-            if (bytesRead < PAGE_SIZE) {
-                // Fill remaining with zeros
-                Arrays.fill(page, bytesRead, PAGE_SIZE, (byte) 0);
-            }
+        try {
+            byte[] page = fileAccessor.readPage(path, 0, PAGE_SIZE);
 
             // If page doesn't have valid HeapPage signature, initialize header so later readers (HeapPage) won't fail
             ByteBuffer buf = ByteBuffer.wrap(page).order(ByteOrder.LITTLE_ENDIAN);
@@ -396,7 +359,6 @@ public class DefaultOperationManager implements OperationManager {
                 // copy back
                 System.arraycopy(buf.array(), 0, page, 0, PAGE_SIZE);
             }
-
 
             return page;
         } catch (IOException e) {
@@ -417,9 +379,8 @@ public class DefaultOperationManager implements OperationManager {
     private void writePage(TableDefinition table, byte[] page) {
         Path path = resolveDataPath(table);
 
-        try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw")) {
-            raf.seek(0);
-            raf.write(page);
+        try {
+            fileAccessor.writePage(path, 0, page);
         } catch (IOException e) {
             throw new RuntimeException("Failed to write page", e);
         }

@@ -20,4 +20,7 @@ public interface CatalogManager {
     TypeDefinition getType(int resultType);
 
     List<ColumnDefinition> getTableColumns(TableDefinition tableDef);
+
+    // Drop table by name — removes table from catalog and deletes data file if exists
+    void dropTable(String tableName);
 }

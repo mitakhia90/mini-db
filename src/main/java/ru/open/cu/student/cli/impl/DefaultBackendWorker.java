@@ -42,6 +42,19 @@ public class DefaultBackendWorker implements BackendWorker {
                     continue;
                 }
 
+                // Handle help locally
+                if (inputLine.equalsIgnoreCase("help")) {
+                    out.println("Available commands:");
+                    out.println("  CREATE TABLE <name> (...)");
+                    out.println("  INSERT INTO <name> VALUES (...)");
+                    out.println("  SELECT ... FROM <name> [WHERE ...]");
+                    out.println("  DROP TABLE <name>");
+                    out.println("  HELP");
+                    out.println("  EXIT / QUIT");
+                    out.println("END");
+                    continue;
+                }
+
                 String result = engine.executeSql(inputLine);
 
                 String[] lines = result.split("\n");

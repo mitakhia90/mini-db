@@ -1,0 +1,81 @@
+Initialized native services in: /home/yury-samohvalov/.gradle/native
+Initialized jansi services in: /home/yury-samohvalov/.gradle/native
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.12/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Starting process 'Gradle build daemon'. Working directory: /home/yury-samohvalov/.gradle/daemon/8.12 Command: /usr/lib/jvm/java-21-openjdk-amd64/bin/java --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-opens=java.base/java.nio.charset=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.xml/javax.xml.namespace=ALL-UNNAMED -XX:MaxMetaspaceSize=384m -XX:+HeapDumpOnOutOfMemoryError -Xms256m -Xmx512m -Dfile.encoding=UTF-8 -Duser.country=RU -Duser.language=ru -Duser.variant -cp /home/yury-samohvalov/.gradle/wrapper/dists/gradle-8.12-bin/cetblhg4pflnnks72fxwobvgv/gradle-8.12/lib/gradle-daemon-main-8.12.jar -javaagent:/home/yury-samohvalov/.gradle/wrapper/dists/gradle-8.12-bin/cetblhg4pflnnks72fxwobvgv/gradle-8.12/lib/agents/gradle-instrumentation-agent-8.12.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon 8.12
+Successfully started process 'Gradle build daemon'
+An attempt to start the daemon took 2.377 secs.
+The client will now receive all logging from the daemon (pid: 441348). The daemon log file: /home/yury-samohvalov/.gradle/daemon/8.12/daemon-441348.out.log
+Daemon will be stopped at the end of the build 
+Using 8 worker leases.
+Received JVM installation metadata from '/usr/lib/jvm/java-21-openjdk-amd64': {JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64, JAVA_VERSION=21.0.9, JAVA_VENDOR=Ubuntu, RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=21.0.9+10-Ubuntu-124.04, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=21.0.9+10-Ubuntu-124.04, VM_VENDOR=Ubuntu, OS_ARCH=amd64}
+Watching the file system is configured to be enabled if available
+Now considering [/home/yury-samohvalov/Projects/mini-db] as hierarchies to watch
+File system watching is active
+Starting Build
+Settings evaluated using settings file '/home/yury-samohvalov/Projects/mini-db/settings.gradle'.
+Projects loaded. Root project using build file '/home/yury-samohvalov/Projects/mini-db/build.gradle'.
+Included projects: [root project 'di-practice']
+
+> Configure project :
+Evaluating root project 'di-practice' using build file '/home/yury-samohvalov/Projects/mini-db/build.gradle'.
+Resolved plugin [id: 'java']
+Resolved plugin [id: 'com.adarshr.test-logger', version: '4.0.0']
+All projects evaluated.
+Task name matched 'test'
+Selected primary task 'test' from project :
+Starting process 'command '/home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java''. Working directory: /home/yury-samohvalov/.gradle/.tmp/tmp-jvm15276708920353824700probe Command: /home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command '/home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java''
+Received JVM installation metadata from '/home/yury-samohvalov/.jdks/corretto-21.0.9': {JAVA_HOME=/home/yury-samohvalov/.jdks/corretto-21.0.9, JAVA_VERSION=21.0.9, JAVA_VENDOR=Amazon.com Inc., RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=21.0.9+11-LTS, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=21.0.9+11-LTS, VM_VENDOR=Amazon.com Inc., OS_ARCH=amd64}
+Tasks to be executed: [task ':compileJava', task ':processResources', task ':classes', task ':compileTestJava', task ':processTestResources', task ':testClasses', task ':test']
+Tasks that were excluded: []
+Resolve mutations for :compileJava (Thread[#77,Execution worker,5,main]) started.
+:compileJava (Thread[#77,Execution worker,5,main]) started.
+This JVM does not support getting OS memory, so no OS memory status updates will be broadcast
+
+> Task :compileJava
+Caching disabled for task ':compileJava' because:
+  Build cache is disabled
+Task ':compileJava' is not up-to-date because:
+  Input property 'stableSources' file /home/yury-samohvalov/Projects/mini-db/src/main/java/ru/open/cu/student/SqlProcessor.java has changed.
+  Input property 'stableSources' file /home/yury-samohvalov/Projects/mini-db/src/main/java/ru/open/cu/student/ast/QueryType.java has changed.
+  Input property 'stableSources' file /home/yury-samohvalov/Projects/mini-db/src/main/java/ru/open/cu/student/catalog/manager/CatalogManager.java has changed.
+  and more...
+Compilation mode: default, forking compiler
+Created classpath snapshot for incremental compilation in 0.004 secs.
+Compiling with toolchain '/home/yury-samohvalov/.jdks/corretto-21.0.9'.
+Starting process 'Gradle Worker Daemon 1'. Working directory: /home/yury-samohvalov/.gradle/workers Command: /home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED @/home/yury-samohvalov/.gradle/.tmp/gradle-worker-classpath1130246587075157181txt -Xmx512m -Dfile.encoding=UTF-8 -Duser.country=RU -Duser.language=ru -Duser.variant worker.org.gradle.process.internal.worker.GradleWorkerMain 'Gradle Worker Daemon 1'
+Successfully started process 'Gradle Worker Daemon 1'
+Started Gradle worker daemon (0.643 secs) with fork options DaemonForkOptions{executable=/home/yury-samohvalov/.jdks/corretto-21.0.9/bin/java, minHeapSize=null, maxHeapSize=null, jvmArgs=[--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED, --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED], keepAliveMode=DAEMON}.
+Compiling with JDK Java compiler API.
+/home/yury-samohvalov/Projects/mini-db/src/main/java/ru/open/cu/student/planner/PlannerImpl.java:32: error: the switch expression does not cover all possible input values
+        return switch (queryTree.commandType) {
+               ^
+1 error
+Incremental compilation of 25 classes completed in 3.688 secs.
+
+> Task :compileJava FAILED
+
+[Incubating] Problems report is available at: file:///home/yury-samohvalov/Projects/mini-db/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler output below.
+  /home/yury-samohvalov/Projects/mini-db/src/main/java/ru/open/cu/student/planner/PlannerImpl.java:32: error: the switch expression does not cover all possible input values
+          return switch (queryTree.commandType) {
+                 ^
+  1 error
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.12/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 17s
+1 actionable task: 1 executed

@@ -29,6 +29,7 @@ public class DefaultParser implements Parser{
             case "SELECT" -> parseSelect();
             case "CREATE" -> parseCreate();
             case "INSERT" -> parseInsert();
+            case "DROP" -> parseDrop();
             default -> throw new IllegalArgumentException("Unsupported SQL statement: " + firstToken);
         };
     }
@@ -417,5 +418,36 @@ public class DefaultParser implements Parser{
             int[] t = prev; prev = cur; cur = t;
         }
         return prev[b.length()];
+    }
+
+    private AstNode parseDrop() {
+        match("DROP");
+        match("TABLE");
+
+        boolean ifExists = false;
+        if (curPosition < tokens.size() && currentToken().getType().equals("IDENT") && currentToken().getValue().equalsIgnoreCase("IF")) {
+            // accept IF EXISTS
+            match("IDENT"); // IF
+            Token next = expectToken("IDENT");
+            if (next.getValue().equalsIgnoreCase("EXISTS")) {
+                ifExists = true;
+            } else {
+                throw new IllegalArgumentException("Expected EXISTS after IF in DROP TABLE");
+            }
+        }
+
+        String tableName;
+        String schemaName = null;
+        Token tableToken = expectToken("IDENT");
+        if (curPosition < tokens.size() && currentToken().getType().equals("DOT")) {
+            schemaName = tableToken.getValue();
+            match("DOT");
+            tableToken = expectToken("IDENT");
+            tableName = tableToken.getValue();
+        } else {
+            tableName = tableToken.getValue();
+        }
+
+        return new DropTableStmt(schemaName, tableName, ifExists);
     }
 }

@@ -67,6 +67,24 @@ public class DefaultEngine implements Engine {
             var queryTree = sqlProcessor.process(sql);
             log("QUERY_TREE", queryTree);
 
+            // Handle DROP table immediately (no need to plan/execute)
+            if (queryTree != null && queryTree.commandType == ru.open.cu.student.ast.QueryType.DROP) {
+                if (queryTree.tableName == null || queryTree.tableName.isBlank()) {
+                    return "ERROR: Table name missing in DROP";
+                }
+                try {
+                    catalog.dropTable(queryTree.tableName);
+                    return "OK";
+                } catch (IllegalArgumentException e) {
+                    // If IF EXISTS specified — swallow error and return OK
+                    try {
+                        boolean ifExists = queryTree.dropIfExists;
+                        if (ifExists) return "OK";
+                    } catch (Exception ignored) { }
+                    throw e;
+                }
+            }
+
             // 4) Planner -> Logical plan
             LogicalPlanNode logical = planner.plan(queryTree);
             log("LOGICAL_PLAN", logical);

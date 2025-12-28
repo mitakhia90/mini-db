@@ -9,6 +9,7 @@ public class QueryTree {
     public List<TargetEntry> targetList;     // что выбираем
     public Expr whereClause;                 // условие отбора
     public QueryType commandType;            // SELECT, INSERT, etc.
+    public boolean dropIfExists;
 
     // Дополнительные поля для INSERT/CREATE TABLE
     public String tableName;

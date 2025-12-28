@@ -33,6 +33,7 @@ public class PlannerImpl implements Planner {
             case CREATE -> planCreate(queryTree);
             case INSERT -> planInsert(queryTree);
             case SELECT -> planSelect(queryTree); // поменять на нужное
+            default -> throw new IllegalArgumentException("Unsupported command type: " + queryTree.commandType);
         };
     }
 
